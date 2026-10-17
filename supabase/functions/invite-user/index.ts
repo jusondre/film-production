@@ -6,6 +6,7 @@
 //   invite: add to the project and email an invitation. If the email can't be sent, the person is still added
 //           and a link comes back so the admin can send it by hand.
 //   link:   make a new invitation link without sending any email (an earlier link stops working).
+//   delete: remove the person completely: their account, sign-in and every project they were on.
 //   revoke: remove the person from the project. If they never finished signing up and have no other project,
 //           their pending account is deleted too, so the old link stops working.
 
@@ -39,7 +40,7 @@ Deno.serve(async (req) => {
   const action = body.action ?? "invite";
   const { projectId, role, redirectTo } = body;
   const address = String(body.email ?? "").trim().toLowerCase();
-  if (!["invite", "link", "revoke"].includes(action)) return reply({ error: "Unknown action." }, 400);
+  if (!["invite", "link", "revoke", "delete"].includes(action)) return reply({ error: "Unknown action." }, 400);
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) return reply({ error: "That doesn’t look like an email address." }, 400);
 
   // The profile columns come from supabase/step5_people.sql. Without them this function can't tell
@@ -54,7 +55,21 @@ Deno.serve(async (req) => {
     return list?.users.find((u) => u.email?.toLowerCase() === address);
   };
 
-  // 3. Revoke.
+  // 3a. Delete: remove the person entirely (account, sign-in, project access) so they can no longer sign in.
+  if (action === "delete") {
+    if (profile?.id === user.id) return reply({ error: "You can’t delete your own account." }, 400);
+    await admin.from("project_members").delete().eq("email", address);
+    await admin.from("invites").delete().eq("email", address);
+    const account = profile?.id ? { id: profile.id } : await findUser();
+    if (account) {
+      const removed = await admin.auth.admin.deleteUser(account.id);
+      if (removed.error) return reply({ error: removed.error.message }, 400);
+    }
+    await admin.from("profiles").delete().eq("email", address); // in case the profile outlived the account
+    return reply({ status: "deleted" });
+  }
+
+  // 3b. Revoke.
   if (action === "revoke") {
     const removed = await admin.from("project_members").delete().eq("project_id", projectId).eq("email", address);
     if (removed.error) return reply({ error: removed.error.message }, 400);

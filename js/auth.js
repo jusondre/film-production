@@ -4,7 +4,10 @@ const Auth = (() => {
   const cfg = window.APP_CONFIG || {};
   const configured = /^https:\/\/.+\.supabase\.co/.test(cfg.supabaseUrl || "")
     && Boolean(cfg.supabaseAnonKey) && !cfg.supabaseAnonKey.startsWith("YOUR");
-  const returnTo = () => location.origin + location.pathname;
+  const local = /^(localhost|127\.|0\.0\.0\.0|\[::1\])/.test(location.hostname);
+  const returnTo = () => (cfg.siteUrl || "").trim() || location.origin + location.pathname;
+  /* True when invitation links would point at this computer instead of a real website. */
+  const linksBroken = () => local && !(cfg.siteUrl || "").trim();
   const MIN_PASSWORD = 8;
 
   let client = null;
@@ -211,6 +214,8 @@ const Auth = (() => {
   const invite = (email, projectId, role) => callInvite({ action: "invite", email, projectId, role });
   /* Makes a new invitation link to pass on by hand. Any earlier link for that email stops working. */
   const inviteLink = (email, projectId, role) => callInvite({ action: "link", email, projectId, role });
+  /* Deletes someone’s account completely, including their access to every project. */
+  const deleteAccount = email => callInvite({ action: "delete", email });
   /* Removes someone from a project, and cancels the invitation if they never accepted. */
   async function revoke(email, projectId) {
     const result = await callInvite({ action: "revoke", email, projectId });
@@ -220,5 +225,5 @@ const Auth = (() => {
     return error ? { error: error.message } : { data: { status: "revoked" } };
   }
 
-  return { start, signOut, changePassword, invite, inviteLink, revoke, isAdmin, profile: () => profile, client: () => client };
+  return { start, signOut, linksBroken, changePassword, invite, inviteLink, revoke, deleteAccount, isAdmin, profile: () => profile, client: () => client };
 })();

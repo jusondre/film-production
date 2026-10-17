@@ -12,7 +12,7 @@ password, and sign in. Sign-in cannot work by double-clicking `index.html`; test
    password = a Google *App password* (Google Account, Security, 2-Step Verification, App passwords).
 4. Authentication, Sign In / Providers: switch OFF "Allow new users to sign up" (only invitations create accounts).
    Under Email, set minimum password length to 8 and Email OTP expiration to 86400 (24 hours).
-5. Authentication, URL Configuration: Site URL = your live address; add it and `http://localhost:8000` to Redirect URLs.
+5. Authentication, URL Configuration: Site URL = your live address; add it and `http://localhost:8000` to Redirect URLs. Also put the live address in `siteUrl` in `config.js`, so invitation links never point at localhost.
 6. Edge Functions, Deploy a new function, Via Editor: name it `invite-user`, paste `supabase/functions/invite-user/index.ts`, deploy. If it already exists, open it and replace the code with this version, then deploy again (it now also creates links and revokes invitations).
 7. Authentication, Emails, Templates: paste `supabase/emails/invite.html` into "Invite user" and
    `supabase/emails/reset-password.html` into "Reset password" (subjects are written at the top of each file).

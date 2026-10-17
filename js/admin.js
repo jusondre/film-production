@@ -62,7 +62,10 @@ const Admin = (() => {
     const rows = accounts.map(a => accountRow(a, projectsOf(a.email), me, { say, done, btn }));
     const list = el("section", "admin-section");
     list.append(...(rows.length ? rows : [el("p", "hint", "Nobody yet.")]));
-    root.replaceChildren(head, inviteForm(projects, reportInvite, done, say), message, list);
+    const warn = Auth.linksBroken()
+      ? el("p", "form-error", "You’re on localhost, so invitation links would open localhost on other people’s devices and fail. Set siteUrl in config.js to your live address first.")
+      : el("span");
+    root.replaceChildren(head, warn, inviteForm(projects, reportInvite, done, say), message, list);
   }
 
   function accountRow(a, projects, me, { say, done, btn }) {
@@ -89,25 +92,15 @@ const Admin = (() => {
 
     const controls = [];
     if (a.id === me.id) controls.push(el("span", "hint", "You"));
-    else if (a.status === "invited") {
-      controls.push(btn("Remove access", "btn btn-danger", async () => {
-        if (!confirm(`Remove ${a.email}’s access? Their invitation will stop working.`)) return;
-        for (const p of projects) {
-          const result = await Auth.revoke(a.email, p.id);
-          if (result.error) return say(result.error);
-        }
-        done("Access removed.");
-      }));
-    } else if (a.status === "approved") {
-      controls.push(btn("Remove access", "btn btn-danger", async () => {
-        if (!confirm(`Remove access for ${a.name || a.email}? They won’t be able to open anything.`)) return;
-        const { error } = await db().from("profiles").update({ status: "revoked" }).eq("id", a.id);
-        if (error) say(error.message); else done("Access removed.");
-      }));
-    } else {
-      controls.push(btn(waiting ? "Approve" : "Restore access", "btn btn-ghost", async () => {
+    else {
+      if (waiting) controls.push(btn("Approve", "btn btn-ghost", async () => {
         const { error } = await db().from("profiles").update({ status: "approved" }).eq("id", a.id);
-        if (error) say(error.message); else done(waiting ? "Approved." : "Access restored.");
+        if (error) say(error.message); else done("Approved.");
+      }));
+      controls.push(btn("Remove access", "btn btn-danger", async () => {
+        if (!confirm(`Remove access for ${a.name || a.email}? This deletes their account and they won’t be able to sign in. You can invite them again later.`)) return;
+        const result = await Auth.deleteAccount(a.email);
+        if (result.error) say(result.error); else done(`${a.name || a.email}’s account was deleted.`);
       }));
     }
 

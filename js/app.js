@@ -88,6 +88,13 @@ const App = (() => {
       if (cancel) cancel.closest("dialog").close("cancel");
     });
     Theme.init(Projects.theme(), Projects.setTheme);
+    // Profile menu: opens on click, closes after choosing something, on outside click, or Escape.
+    const menu = $("menu"), toggle = $("profile-btn");
+    const setMenu = open => { menu.hidden = !open; toggle.setAttribute("aria-expanded", String(open)); };
+    toggle.onclick = e => { e.stopPropagation(); setMenu(menu.hidden); };
+    menu.onclick = () => setMenu(false);
+    document.addEventListener("click", e => { if (!$("profile-menu").contains(e.target)) setMenu(false); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
     $("new-project").onclick = openProjectDialog;
     $("project-select").onchange = e => { adminOpen = false; Projects.setActive(e.target.value); render(); };
     $("admin-open").onclick = () => { adminOpen = !adminOpen; render(); };

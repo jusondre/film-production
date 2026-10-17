@@ -3,4 +3,7 @@
 window.APP_CONFIG = {
   supabaseUrl: "https://vioxoepubvaqjzvkxqjo.supabase.co",
   supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpb3hvZXB1YnZhcWp6dmt4cWpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIyMjA0NDEsImV4cCI6MjEwNzc5NjQ0MX0.CGK0l4Hc5BSNNKn1bbvDTPWYMfVvt2kugHEpVmMXCyU",
+  // The live address people open the site at, e.g. "https://your-film-site.netlify.app/".
+  // Invitation and password-reset links point here, even when YOU are testing on localhost.
+  siteUrl: "https://jusondre.github.io/film-production/",
 };
