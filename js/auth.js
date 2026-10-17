@@ -146,6 +146,9 @@ const Auth = (() => {
     button("Sign out", "btn btn-ghost", signOut));
   const errorScreen = text => message("Something went wrong", text, button("Try again", "btn btn-primary", () => refresh()), button("Sign out", "btn btn-ghost", signOut));
 
+  /* The joined_at column exists once supabase/step5_people.sql has been run; before that nobody is held back. */
+  const needsSignup = p => "joined_at" in p && !p.joined_at && p.role !== "admin";
+
   /* ---------- session ---------- */
   async function refresh() {
     const { data: { session } } = await client.auth.getSession();
@@ -156,6 +159,9 @@ const Auth = (() => {
     if (!data) return showGate(errorScreen("We couldn’t find your account record. Ask the admin to check your access."));
     profile = data;
 
+    // Anyone who got in through an invitation but hasn't filled in the sign-up form yet is sent to it first,
+    // however they arrived (emailed link, copied link, or a link that signs them straight in).
+    if (data.status === "approved" && needsSignup(data)) return showGate(passwordScreen("invite", data.email));
     if (data.status === "approved") { $("gate").hidden = true; $("app").hidden = false; onApproved(); }
     else showGate(data.status === "pending" ? pendingScreen() : revokedScreen());
   }

@@ -44,7 +44,10 @@ const Admin = (() => {
       if (result.error) return finish(result.error, false);
       const { status, emailed, emailError, link } = result.data;
       if (status === "exists") return finish(`${address} already has an account and can now open “${title}”.`);
-      if (emailed === false) return finish(`${address} was added to “${title}”, but the email couldn’t be sent (${emailError}). Send them this link yourself:`, false, link);
+      if (emailed === false) {
+        const limited = /rate limit/i.test(emailError || "");
+        return finish(`${address} was added to “${title}”. ${limited ? "The email limit was reached, so no email went out." : `The email couldn’t be sent (${emailError}).`} Send them this link yourself:`, false, link);
+      }
       finish(`Invitation sent to ${address} for “${title}”.`);
     };
 
