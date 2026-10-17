@@ -84,6 +84,7 @@ const Auth = (() => {
     history.replaceState(null, "", location.pathname);
     if (/database error saving new user|not_invited/i.test(text)) return "The database still has the old invite-only rule. Run supabase/step7_discord.sql in the Supabase SQL Editor, then sign in again.";
     if (/email/i.test(text)) return `Discord didn’t share a verified email address, which Supabase needs to create your account. Verify the email on your Discord account, then try again. (${text})`;
+    if (/exchange external code/i.test(text)) return `Discord let you in, but Supabase couldn’t finish the sign-in: the Client ID or Client Secret saved in Supabase (Authentication, Providers, Discord) doesn’t match your Discord app, or the redirect URL in Discord is off. See “If sign-in fails” in SETUP.md. (${text})`;
     if (/redirect/i.test(text)) return `Discord or Supabase doesn’t accept the return address. Check the redirect URLs in SETUP.md. (${text})`;
     return text;
   }

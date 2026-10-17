@@ -28,7 +28,8 @@ Deno.serve(async (req) => {
   const admin = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
   // 1. Who is asking? Only a signed-in Discord account counts.
-  const { data: { user } } = await asCaller.auth.getUser();
+  const jwt = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
+  const { data: { user } } = await asCaller.auth.getUser(jwt);
   if (!user) return reply({ error: "You are not signed in." }, 401);
   const identity = user.identities?.find((i) => i.provider === "discord");
   const discordId = identity?.identity_data?.provider_id ?? identity?.identity_data?.sub ?? identity?.id;
@@ -44,7 +45,7 @@ Deno.serve(async (req) => {
   if (!token || !guild) return reply({ error: "The server isn’t set up yet: DISCORD_BOT_TOKEN and DISCORD_GUILD_ID are missing. See SETUP.md." }, 500);
 
   const discord = (path: string) =>
-    fetch(`https://discord.com/api/v10${path}`, { headers: { Authorization: `Bot ${token}` } });
+    fetch(`https://discord.com/api/v10${path}`, { headers: { Authorization: `Bot ${token.trim().replace(/^Bot\s+/i, "")}`, "User-Agent": "DiscordBot (https://jusondre.github.io/film-production/, 1.0)" } });
 
   // 2. Is this person in the server, and which roles do they have?
   const memberRes = await discord(`/guilds/${guild}/members/${discordId}`);
@@ -57,8 +58,13 @@ Deno.serve(async (req) => {
     const roles: { id: string; name: string }[] = await rolesRes.json();
     const adminIds = roles.filter((r) => r.id === roleWanted || r.name.toLowerCase() === roleWanted).map((r) => r.id);
     isAdmin = (member.roles as string[]).some((id) => adminIds.includes(id));
-  } else if (memberRes.status !== 404) {
-    return reply({ error: `Discord couldn’t be reached (${memberRes.status}). Check the bot token and server ID.` }, 502);
+  } else {
+    const body = await memberRes.json().catch(() => ({}));
+    // 10007 = Unknown Member (genuinely not in the server). Anything else is a setup problem, so say so
+    // instead of silently treating it as "not a member" (a wrong server ID gives 404 / 10004 Unknown Guild).
+    if (memberRes.status !== 404 || body.code !== 10007) {
+      return reply({ error: `Discord said ${memberRes.status}: ${body.message ?? "unknown"} (code ${body.code ?? "-"}). Check the bot token, that the bot is in the server, and DISCORD_GUILD_ID.` }, 502);
+    }
   }
 
   // 3. Record the answer for the database rules.

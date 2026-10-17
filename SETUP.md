@@ -33,3 +33,15 @@ There are no passwords, no sign-up, no invitations and no emails to send. Roles 
 - In the server: all projects, read-only. With the admin role: editing, new projects, deleting, and "View as viewer" in the menu.
 - The site asks Discord again every 15 minutes (and when you return to the tab), so someone who leaves the server or loses the admin role is locked out or demoted quickly.
 - Anyone who was added through the old email system is not needed any more; old accounts and tables can stay or be deleted.
+
+## If sign-in fails
+- **"Unable to exchange external code"**: Supabase couldn't trade Discord's code for a token. Fix the Discord provider in Supabase:
+  1. Discord Developer Portal, your app, **OAuth2**: copy the **Client ID** (not the Application ID of another app).
+  2. Press **Reset Secret**, copy the new secret right away (it is shown once).
+  3. Supabase, Authentication, Sign In / Providers, Discord: paste both, with no spaces before or after, and **Save**.
+     The secret is not the Bot token and not the Public Key.
+  4. In Discord OAuth2, Redirects must contain exactly `https://vioxoepubvaqjzvkxqjo.supabase.co/auth/v1/callback`. Save.
+  5. Sign in again from the site's address. Don't reload the page mid-sign-in, since the code works only once.
+- **"You're not in the server"** although you are: check `DISCORD_GUILD_ID` is the Server ID, and that you signed in with the Discord account that is in the server.
+- **"Discord said 401 / 403 ..."**: wrong `DISCORD_BOT_TOKEN`, or the bot isn't in the server. The message names the cause.
+- To see what the function returned: Supabase, Edge Functions, `discord-access`, Logs.
