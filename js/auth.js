@@ -142,7 +142,7 @@ const Auth = (() => {
   const fileScreen = () => message("Open it from a web address", "Sign-in needs a web address. Run “python3 -m http.server 8000” in this folder and open http://localhost:8000, or deploy the folder. SETUP.md has the details.");
   const pendingScreen = () => message("You’re on the list.", `Your account is waiting for the admin’s go-ahead. You’re signed in as ${profile.email}.`,
     button("Check again", "btn btn-primary", () => refresh()), button("Sign out", "btn btn-ghost", signOut));
-  const revokedScreen = () => message("Access paused", "Your access to Film Production has been removed. If you think that’s a mistake, get in touch with the admin.",
+  const revokedScreen = () => message("Access removed", "Your access to Film Production has been removed. If you think that’s a mistake, get in touch with the admin.",
     button("Sign out", "btn btn-ghost", signOut));
   const errorScreen = text => message("Something went wrong", text, button("Try again", "btn btn-primary", () => refresh()), button("Sign out", "btn btn-ghost", signOut));
 

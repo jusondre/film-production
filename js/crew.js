@@ -100,12 +100,12 @@ const Crew = (() => {
       const fields = Object.fromEntries(["name", "role", "email", "phone"].map(k => [k, form.elements[k].value.trim()]));
       if (member) Object.assign(member, fields);
       else project.crew.push({ id: uid(), ...fields });
-      Projects.persist(); render(root, project);
+      Projects.persist(true); render(root, project);
     };
     $("crew-delete").onclick = () => {
       project.crew = project.crew.filter(c => c !== member);
       project.tasks.forEach(t => { if (t.assignee === member.id) t.assignee = ""; });
-      Projects.persist(); dialog.close(); render(root, project);
+      Projects.persist(true); dialog.close(); render(root, project);
     };
     dialog.returnValue = "";
     dialog.showModal();

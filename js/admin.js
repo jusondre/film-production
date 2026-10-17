@@ -1,11 +1,11 @@
-/* Admin: one screen for everyone's access to every project. Opened from the Admin button in the top bar (admins only).
-   Add people by email, see who is pending or accepted, change roles, revoke invitations. */
+/* Admin: one plain list of every account. Under each name: full name, phone, email and the projects they can open.
+   Admins can invite people (top form) and remove or restore someone's access. Opened from the Admin button (admins only). */
 const Admin = (() => {
   const { el } = Dom;
   const db = () => Auth.client();
   const ROLES = [["editor", "Editor"], ["viewer", "Viewer"]];
   let flash = null;   // { text, ok, link } shown once after the next refresh
-  let chosen = null;  // project picked in the add form, kept across refreshes
+  let chosen = null;  // project picked in the invite form, kept across refreshes
 
   async function render(root) {
     root.replaceChildren(el("p", "hint", "Loading…"));
@@ -21,8 +21,7 @@ const Admin = (() => {
 
   function draw(root, projects, members, people) {
     const me = Auth.profile();
-    const byEmail = new Map(people.map(p => [p.email, p]));
-    const accepted = m => Boolean(byEmail.get(m.email)?.joined_at);
+    const titles = new Map(projects.map(p => [p.id, p.title]));
 
     const message = el("div", "admin-message"); message.setAttribute("role", "alert");
     const say = (text, ok = false, link = "") => {
@@ -31,15 +30,9 @@ const Admin = (() => {
       message.scrollIntoView({ block: "nearest" });
     };
     if (flash) { say(flash.text, flash.ok, flash.link); flash = null; }
-    /* Refreshes the lists and then shows a message. */
     const done = (text, ok = true, link = "") => { flash = { text, ok, link }; render(root); };
-    const run = async (request, text) => {
-      const { error } = await request;
-      if (error) say(error.message); else done(text);
-    };
     const btn = (label, cls, fn) => { const b = el("button", cls, label); b.type = "button"; b.onclick = fn; return b; };
 
-    /* The same message wording for a new or repeated invitation. */
     const reportInvite = (result, address, title, finish) => {
       if (result.error) return finish(result.error, false);
       const { status, emailed, emailError, link } = result.data;
@@ -51,75 +44,83 @@ const Admin = (() => {
       finish(`Invitation sent to ${address} for “${title}”.`);
     };
 
-    const pendingCount = members.filter(m => !accepted(m)).length;
+    /* One entry per account: everyone with a profile, plus people invited who haven't signed up yet. */
+    const projectsOf = email => members.filter(m => m.email === email)
+      .map(m => ({ id: m.project_id, title: titles.get(m.project_id), role: m.role })).filter(p => p.title);
+    const accounts = people.map(p => ({
+      id: p.id, email: p.email, admin: p.role === "admin", status: p.status,
+      name: [p.first_name, p.last_name].filter(Boolean).join(" ") || p.full_name || "",
+      phone: p.phone || "", joined: Boolean(p.joined_at) || p.role === "admin",
+    }));
+    const known = new Set(people.map(p => p.email));
+    [...new Set(members.map(m => m.email))].filter(e => !known.has(e))
+      .forEach(email => accounts.push({ email, name: "", phone: "", status: "invited", joined: false }));
+
     const head = el("div", "vis-head");
-    head.append(el("h3", null, "Admin"),
-      el("span", "hint", `${members.length - pendingCount} accepted, ${pendingCount} pending, across ${projects.length} ${projects.length === 1 ? "project" : "projects"}`));
-    const parts = [head, addForm(projects, reportInvite, done, say), message];
+    head.append(el("h3", null, "Accounts"), el("span", "hint", `${accounts.length} ${accounts.length === 1 ? "account" : "accounts"}`));
 
-    projects.forEach(project => {
-      const list = members.filter(m => m.project_id === project.id);
-      const rows = list.map(m => memberRow(project, m, byEmail.get(m.email), accepted(m), { say, done, run, btn, reportInvite }));
-      parts.push(block(project.title, rows, "Nobody added yet.", `${list.filter(accepted).length} accepted, ${list.filter(m => !accepted(m)).length} pending`));
-    });
-    if (!projects.length) parts.push(el("p", "hint", "Create a project first, then add people to it."));
-
-    parts.push(block("Everyone with an account", people.map(p => row({
-      name: p.full_name || p.email,
-      sub: p.status === "pending" ? "Waiting for approval" : p.status === "revoked" ? "Access removed"
-        : [p.full_name ? p.email : "", p.phone].filter(Boolean).join(" · "),
-      badge: p.role === "admin" ? "Admin" : "",
-      controls: p.id === me.id ? [el("span", "hint", "You")]
-        : p.status === "approved" ? [btn("Block sign-in", "btn btn-danger", () => {
-            if (confirm(`Block ${p.email} from signing in at all?`)) run(db().from("profiles").update({ status: "revoked" }).eq("id", p.id), "Sign-in blocked.");
-          })]
-        : [btn(p.status === "pending" ? "Approve" : "Restore access", "btn btn-ghost",
-            () => run(db().from("profiles").update({ status: "approved" }).eq("id", p.id), "Access restored."))],
-    })), "Nobody yet.", String(people.length)));
-
-    root.replaceChildren(...parts);
+    const rows = accounts.map(a => accountRow(a, projectsOf(a.email), me, { say, done, btn }));
+    const list = el("section", "admin-section");
+    list.append(...(rows.length ? rows : [el("p", "hint", "Nobody yet.")]));
+    root.replaceChildren(head, inviteForm(projects, reportInvite, done, say), message, list);
   }
 
-  function memberRow(project, m, person, isAccepted, { say, done, run, btn, reportInvite }) {
-    const select = el("select", "select"); select.ariaLabel = `Role for ${m.email}`;
-    ROLES.forEach(([value, label]) => select.append(new Option(label, value)));
-    select.value = m.role;
-    select.onchange = () => run(db().from("project_members").update({ role: select.value })
-      .eq("project_id", project.id).eq("email", m.email), "Role updated.");
+  function accountRow(a, projects, me, { say, done, btn }) {
+    const removed = a.status === "revoked";
+    const waiting = a.status === "pending";
+    const unjoined = a.status === "invited" || (!a.joined && a.status === "approved");
 
-    if (isAccepted) {
-      return row({
-        name: person.full_name || m.email, badge: "Accepted",
-        sub: [person.full_name ? m.email : "", person.phone].filter(Boolean).join(" · "),
-        controls: [select, btn("Remove", "btn btn-danger", async () => {
-          if (!confirm(`Remove ${person.full_name || m.email} from “${project.title}”?`)) return;
-          const result = await Auth.revoke(m.email, project.id);
-          if (result.error) say(result.error); else done("Removed from the project.");
-        })],
-      });
-    }
-    return row({
-      name: m.email, badge: "Pending", pending: true,
-      sub: "Invited, hasn’t created an account yet",
-      controls: [select,
-        btn("Copy link", "btn btn-ghost", async () => {
-          const result = await Auth.inviteLink(m.email, project.id, select.value);
+    const who = el("strong", null, a.name || a.email);
+    if (a.admin) who.append(" ", el("span", "badge", "Admin"));
+    if (removed) who.append(" ", el("span", "badge badge-pending", "Access removed"));
+    else if (waiting) who.append(" ", el("span", "badge badge-pending", "Waiting for approval"));
+    else if (unjoined) who.append(" ", el("span", "badge badge-pending", "Invited, not signed up"));
+
+    const info = el("span", "crew-info");
+    info.append(who);
+    if (a.name) info.append(el("small", null, a.email));
+    info.append(el("small", null, a.phone ? `Phone: ${a.phone}` : "Phone: not given"));
+    info.append(el("small", null, projects.length
+      ? "Projects: " + projects.map(p => `${p.title} (${p.role === "editor" ? "editor" : "viewer"})`).join(", ")
+      : a.admin ? "Projects: all (admin)" : "Projects: none"));
+
+    const person = el("span", "crew-person");
+    person.append(el("span", "avatar avatar-lg", Crew.initials(a.name || a.email)), info);
+
+    const controls = [];
+    if (a.id === me.id) controls.push(el("span", "hint", "You"));
+    else if (a.status === "invited") {
+      controls.push(btn("Remove access", "btn btn-danger", async () => {
+        if (!confirm(`Remove ${a.email}’s access? Their invitation will stop working.`)) return;
+        for (const p of projects) {
+          const result = await Auth.revoke(a.email, p.id);
           if (result.error) return say(result.error);
-          say("New link created. Any link sent earlier to this email no longer works.", true, result.data.link);
-        }),
-        btn("Resend", "btn btn-ghost", async () => reportInvite(await Auth.invite(m.email, project.id, select.value), m.email, project.title, say)),
-        btn("Revoke", "btn btn-danger", async () => {
-          if (!confirm(`Revoke the invitation for ${m.email} to “${project.title}”? Their link will stop working.`)) return;
-          const result = await Auth.revoke(m.email, project.id);
-          if (result.error) say(result.error); else done("Invitation revoked.");
-        })],
-    });
+        }
+        done("Access removed.");
+      }));
+    } else if (a.status === "approved") {
+      controls.push(btn("Remove access", "btn btn-danger", async () => {
+        if (!confirm(`Remove access for ${a.name || a.email}? They won’t be able to open anything.`)) return;
+        const { error } = await db().from("profiles").update({ status: "revoked" }).eq("id", a.id);
+        if (error) say(error.message); else done("Access removed.");
+      }));
+    } else {
+      controls.push(btn(waiting ? "Approve" : "Restore access", "btn btn-ghost", async () => {
+        const { error } = await db().from("profiles").update({ status: "approved" }).eq("id", a.id);
+        if (error) say(error.message); else done(waiting ? "Approved." : "Access restored.");
+      }));
+    }
+
+    const r = el("div", "admin-row");
+    const actions = el("span", "admin-actions"); actions.append(...controls);
+    r.append(person, actions);
+    return r;
   }
 
-  function addForm(projects, reportInvite, done, say) {
+  function inviteForm(projects, reportInvite, done, say) {
     const form = el("form", "admin-add");
     const email = el("input", "search"); email.type = "email"; email.required = true;
-    email.placeholder = "Email address"; email.ariaLabel = "Email to invite";
+    email.placeholder = "Invite by email"; email.ariaLabel = "Email to invite";
     const project = el("select", "select"); project.ariaLabel = "Project";
     projects.forEach(p => project.append(new Option(p.title, p.id)));
     project.value = projects.some(p => p.id === chosen) ? chosen : (Projects.active()?.id || projects[0]?.id || "");
@@ -152,25 +153,6 @@ const Admin = (() => {
     };
     box.append(input, copy);
     return box;
-  }
-
-  function row({ name, sub, badge, pending, controls }) {
-    const r = el("div", "admin-row");
-    const who = el("strong", null, name);
-    if (badge) who.append(" ", el("span", pending ? "badge badge-pending" : "badge", badge));
-    const info = el("span", "crew-info"); info.append(who, el("small", null, sub || ""));
-    const person = el("span", "crew-person");
-    person.append(el("span", "avatar avatar-lg", Crew.initials(name)), info);
-    const actions = el("span", "admin-actions"); actions.append(...controls);
-    r.append(person, actions);
-    return r;
-  }
-
-  function block(title, rows, emptyText, count) {
-    const wrap = el("section", "admin-section");
-    const h = el("h4", null, title); h.append(el("span", null, count));
-    wrap.append(h, ...(rows.length ? rows : [el("p", "hint", emptyText)]));
-    return wrap;
   }
 
   return { render };

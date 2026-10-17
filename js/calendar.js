@@ -101,11 +101,11 @@ const Calendar = (() => {
       };
       if (editingId) Object.assign(project.events.find(e => e.id === editingId), fields);
       else project.events.push({ id: crypto.randomUUID(), ...fields });
-      Projects.persist(); render(root, project);
+      Projects.persist(true); render(root, project);
     };
     del.onclick = () => {
       project.events = project.events.filter(e => e.id !== editingId);
-      Projects.persist(); dialog.close(); render(root, project);
+      Projects.persist(true); dialog.close(); render(root, project);
     };
     dialog.returnValue = "";
     dialog.showModal();

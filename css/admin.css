@@ -20,3 +20,7 @@
 .badge-pending { background: transparent; border: 1px solid var(--line); }
 .admin-row:hover .badge-pending { background: transparent; }
 .admin-add .search { flex: 1; min-width: 220px; }
+.admin-row { align-items: flex-start; }
+.admin-row .crew-info small { display: block; line-height: 1.5; }
+.admin-actions { padding-top: 4px; }
+.admin-row .crew-info small { white-space: normal; overflow: visible; }

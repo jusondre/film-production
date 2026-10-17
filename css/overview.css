@@ -12,7 +12,7 @@
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
 }
 .ov-input:focus { outline: 0; border-color: var(--ink); }
-textarea.ov-input { resize: vertical; }
+textarea.ov-input { resize: none; overflow: hidden; display: block; }
 .ov-input:disabled { opacity: 1; cursor: default; }
 
 .ov-danger { display: flex; align-items: center; gap: 16px; max-width: 760px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); }

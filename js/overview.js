@@ -34,11 +34,17 @@ const Overview = (() => {
     return wrap;
   }
 
+  /* Makes a text box exactly as tall as its text, so nothing is ever hidden or needs scrolling. */
+  function fit(box) {
+    box.style.height = "auto";
+    box.style.height = box.scrollHeight + 2 + "px";
+  }
+
   function bind(control, details, key, editable) {
     control.classList.add("ov-input");
     control.value = details[key] || "";
     if (control.tagName === "SELECT") control.disabled = !editable; else control.readOnly = !editable;
-    control.oninput = control.onchange = () => { details[key] = control.value; Projects.persist(); };
+    control.oninput = control.onchange = () => { details[key] = control.value; if (control.tagName === "TEXTAREA") fit(control); Projects.persist(); };
     return control;
   }
 
@@ -83,7 +89,7 @@ const Overview = (() => {
       field("Shoot starts", input("date", details, "shootStart", editable)),
       field("Shoot ends", input("date", details, "shootEnd", editable)));
     form.append(row1,
-      field("Logline", area(2, details, "logline", editable, "One or two sentences on what the film is about")),
+      field("Logline", area(1, details, "logline", editable, "One or two sentences on what the film is about")),
       row2,
       field("Notes", area(7, details, "notes", editable, "Anything the team should know: budget status, contacts, decisions")));
 
@@ -105,6 +111,12 @@ const Overview = (() => {
       parts.push(danger);
     }
     root.replaceChildren(...parts);
+    // Size the text boxes once they are on the page, and again if the window width changes the wrapping.
+    const boxes = [...root.querySelectorAll("textarea.ov-input")];
+    boxes.forEach(fit);
+    requestAnimationFrame(() => boxes.forEach(fit));
+    document.fonts?.ready.then(() => boxes.forEach(fit));
+    window.onresize = () => boxes.forEach(b => b.isConnected && fit(b));
   }
 
   return { render, FORMATS, STATUSES };

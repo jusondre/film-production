@@ -71,7 +71,7 @@ const Tasks = (() => {
         const task = project.tasks.find(t => t.id === e.dataTransfer.getData("text/plain"));
         if (task) {
           project.tasks = project.tasks.filter(t => t !== task).concat(Object.assign(task, { status: status.id }));
-          Projects.persist();
+          Projects.persist(true);
         }
         render(root, project);
       };
@@ -151,11 +151,11 @@ const Tasks = (() => {
       });
       if (editingId) project.tasks[project.tasks.findIndex(t => t.id === editingId)] = draft;
       else project.tasks.push({ id: uid(), ...draft });
-      Projects.persist(); render(root, project);
+      Projects.persist(true); render(root, project);
     };
     $("task-delete").onclick = () => {
       project.tasks = project.tasks.filter(t => t.id !== editingId);
-      Projects.persist(); dialog.close(); render(root, project);
+      Projects.persist(true); dialog.close(); render(root, project);
     };
     dialog.returnValue = "";
     dialog.showModal();

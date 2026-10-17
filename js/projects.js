@@ -71,12 +71,12 @@ const Projects = (() => {
   }
 
   /* Called by every tab after it changes something. */
-  function persist() {
+  function persist(now = false) {
     if (!canEdit()) return;
     pending = active();
     onStatus("Saving…");
     clearTimeout(timer);
-    timer = setTimeout(flush, SAVE_DELAY);
+    if (now) flush(); else timer = setTimeout(flush, SAVE_DELAY);
   }
 
   async function flush() {
@@ -123,6 +123,9 @@ const Projects = (() => {
     };
     setInterval(check, SYNC_EVERY);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) check(); });
+    // Save right away when the tab is hidden or closed, so nothing waits in the delay.
+    document.addEventListener("visibilitychange", () => { if (document.hidden && pending) flush(); });
+    window.addEventListener("pagehide", () => { if (pending) flush(); });
     window.addEventListener("beforeunload", e => { if (pending || saving) { flush(); e.preventDefault(); } });
   }
 
