@@ -31,4 +31,5 @@ Project details and tab content are saved as you type; the equipment list is sav
 - `supabase/functions/discord-access/`  checks Discord with the bot and records the answer
 - `supabase/setup.sql`, `step2_projects.sql`  tables (`step4_files.sql` is only for the removed Files tab)
 - `supabase/step7_discord.sql`  access rules: Discord members read, Discord admins edit
+- `supabase/step8_owner.sql`  only the Discord user `jusondre` can delete a project (admins can't)
 - `css/access.css`   view-only mode (members without the admin role, and the admin's preview)

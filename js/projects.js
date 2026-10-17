@@ -57,7 +57,7 @@ const Projects = (() => {
     clearTimeout(timer); pending = null;
     const { data, error } = await db().from("projects").delete().eq("id", project.id).select("id");
     if (error) throw error;
-    if (!data.length) throw new Error("You don’t have permission to delete this project.");
+    if (!data.length) throw new Error("Only jusondre can delete a project.");
     list = list.filter(p => p !== project);
     activeId = list[0]?.id || null;
     Storage.save({ ...Storage.load(), activeId });

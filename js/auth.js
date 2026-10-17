@@ -12,9 +12,10 @@ const Auth = (() => {
   let client = null;
   let onReady = () => {};
   let status = "signed-out";   // "signed-out" | "not-member" | "member"
-  let me = null;               // { id, name, avatar, isAdmin } once signed in with Discord
+  let me = null;               // { id, name, avatar, isAdmin, isOwner } once signed in with Discord
 
   const isAdmin = () => status === "member" && Boolean(me?.isAdmin);
+  const isOwner = () => status === "member" && Boolean(me?.isOwner);   // only jusondre may delete projects
 
   /* ---------- gate screens (setup problems and errors only) ---------- */
   function showGate(content) {
@@ -57,7 +58,7 @@ const Auth = (() => {
     try { result = await check(); }
     catch (error) { return showGate(errorScreen(error.message)); }
 
-    me = { id: session.user.id, name: result.name, avatar: result.avatar, isAdmin: result.isAdmin };
+    me = { id: session.user.id, name: result.name, avatar: result.avatar, isAdmin: result.isAdmin, isOwner: Boolean(result.isOwner) };
     status = result.isMember ? "member" : "not-member";
     showApp();
     onReady();
@@ -108,5 +109,5 @@ const Auth = (() => {
     location.reload();
   }
 
-  return { start, signIn, signOut, siteUrl, isAdmin, status: () => status, me: () => me, profile: () => (status === "member" ? me : null), client: () => client };
+  return { start, signIn, signOut, siteUrl, isAdmin, isOwner, status: () => status, me: () => me, profile: () => (status === "member" ? me : null), client: () => client };
 })();

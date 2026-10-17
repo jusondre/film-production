@@ -49,10 +49,11 @@ Deno.serve(async (req) => {
 
   // 2. Is this person in the server, and which roles do they have?
   const memberRes = await discord(`/guilds/${guild}/members/${discordId}`);
-  let isMember = false, isAdmin = false;
+  let isMember = false, isAdmin = false, username: string | null = null;
   if (memberRes.ok) {
     isMember = true;
     const member = await memberRes.json();
+    username = member.user?.username ?? null;   // straight from Discord, so it can't be faked from the browser
     const rolesRes = await discord(`/guilds/${guild}/roles`);
     if (!rolesRes.ok) return reply({ error: `Discord wouldn’t list the server’s roles (${rolesRes.status}). Check the bot is in the server.` }, 502);
     const roles: { id: string; name: string }[] = await rolesRes.json();
@@ -69,10 +70,12 @@ Deno.serve(async (req) => {
 
   // 3. Record the answer for the database rules.
   const saved = await admin.from("discord_access").upsert({
-    user_id: user.id, discord_id: String(discordId), name, avatar_url: avatar,
+    user_id: user.id, discord_id: String(discordId), name, avatar_url: avatar, username,
     is_member: isMember, is_admin: isAdmin, checked_at: new Date().toISOString(),
   });
   if (saved.error) return reply({ error: saved.error.message }, 500);
 
-  return reply({ isMember, isAdmin, name, avatar });
+  // Only this Discord user may delete projects (the database enforces it too: see step8_owner.sql).
+  const isOwner = isMember && isAdmin && username?.toLowerCase() === "jusondre";
+  return reply({ isMember, isAdmin, isOwner, name, avatar });
 });

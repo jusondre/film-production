@@ -95,7 +95,7 @@ const Overview = (() => {
 
     const parts = [head, summary(project), form];
 
-    if (Auth.isAdmin() && !Projects.previewing()) {
+    if (Auth.isOwner() && !Projects.previewing()) {
       const danger = el("div", "ov-danger");
       const del = el("button", "btn btn-danger", "Delete project");
       del.onclick = async () => {
@@ -106,7 +106,7 @@ const Overview = (() => {
           Projects.refresh();
         } catch (error) { del.disabled = false; alert(error.message); }
       };
-      danger.append(del, el("span", "hint", "Only admins can delete a project."));
+      danger.append(del, el("span", "hint", "Only jusondre can delete a project."));
       parts.push(danger);
     }
     root.replaceChildren(...parts);
