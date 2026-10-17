@@ -1,18 +1,18 @@
-/* Admin: one plain list of every account. Under each name: full name, phone, email and the projects they can open.
-   Admins can invite people (top form) and remove or restore someone's access. Opened from the Admin button (admins only). */
+/* Admin: add and remove editors. Editors sign in with a code sent to their email and can change the projects you give them.
+   Everyone else views a project through its view link (Overview tab). Opened from the Profile menu (admins only). */
 const Admin = (() => {
   const { el } = Dom;
   const db = () => Auth.client();
-  const ROLES = [["editor", "Editor"], ["viewer", "Viewer"]];
-  let flash = null;   // { text, ok, link } shown once after the next refresh
-  let chosen = null;  // project picked in the invite form, kept across refreshes
+  const ALL = "all";
+  let flash = null;      // { text, ok } shown once after the next refresh
+  let chosen = ALL;      // project picked in the add form, kept across refreshes
 
   async function render(root) {
     root.replaceChildren(el("p", "hint", "Loading…"));
     const [projects, members, people] = await Promise.all([
       db().from("projects").select("id, title").order("created_at"),
       db().from("project_members").select("*").order("added_at"),
-      db().from("profiles").select("*").order("created_at"),
+      db().from("profiles").select("email, role").order("created_at"),
     ]);
     const error = projects.error || members.error || people.error;
     if (error) return root.replaceChildren(el("p", "form-error", error.message));
@@ -20,132 +20,92 @@ const Admin = (() => {
   }
 
   function draw(root, projects, members, people) {
-    const me = Auth.profile();
     const titles = new Map(projects.map(p => [p.id, p.title]));
+    const admins = new Set(people.filter(p => p.role === "admin").map(p => p.email));
+    const signedUp = new Set(people.map(p => p.email));
 
     const message = el("div", "admin-message"); message.setAttribute("role", "alert");
-    const say = (text, ok = false, link = "") => {
+    const say = (text, ok = false) => {
       message.replaceChildren(el("p", ok ? "form-error form-ok" : "form-error", text));
-      if (link) message.append(linkBox(link));
       message.scrollIntoView({ block: "nearest" });
     };
-    if (flash) { say(flash.text, flash.ok, flash.link); flash = null; }
-    const done = (text, ok = true, link = "") => { flash = { text, ok, link }; render(root); };
+    if (flash) { say(flash.text, flash.ok); flash = null; }
+    const done = text => { flash = { text, ok: true }; render(root); };
     const btn = (label, cls, fn) => { const b = el("button", cls, label); b.type = "button"; b.onclick = fn; return b; };
 
-    const reportInvite = (result, address, title, finish) => {
-      if (result.error) return finish(result.error, false);
-      const { status, emailed, emailError, link } = result.data;
-      if (status === "exists") return finish(`${address} already has an account and can now open “${title}”.`);
-      if (emailed === false) {
-        const limited = /rate limit/i.test(emailError || "");
-        return finish(`${address} was added to “${title}”. ${limited ? "The email limit was reached, so no email went out." : `The email couldn’t be sent (${emailError}).`} Send them this link yourself:`, false, link);
-      }
-      finish(`Invitation sent to ${address} for “${title}”.`);
-    };
-
-    /* One entry per account: everyone with a profile, plus people invited who haven't signed up yet. */
-    const projectsOf = email => members.filter(m => m.email === email)
-      .map(m => ({ id: m.project_id, title: titles.get(m.project_id), role: m.role })).filter(p => p.title);
-    const accounts = people.map(p => ({
-      id: p.id, email: p.email, admin: p.role === "admin", status: p.status,
-      name: [p.first_name, p.last_name].filter(Boolean).join(" ") || p.full_name || "",
-      phone: p.phone || "", joined: Boolean(p.joined_at) || p.role === "admin",
-    }));
-    const known = new Set(people.map(p => p.email));
-    [...new Set(members.map(m => m.email))].filter(e => !known.has(e))
-      .forEach(email => accounts.push({ email, name: "", phone: "", status: "invited", joined: false }));
-
+    const emails = [...new Set([...members.map(m => m.email), ...people.map(p => p.email)])].filter(e => !admins.has(e));
     const head = el("div", "vis-head");
-    head.append(el("h3", null, "Accounts"), el("span", "hint", `${accounts.length} ${accounts.length === 1 ? "account" : "accounts"}`));
+    head.append(el("h3", null, "Editors"), el("span", "hint", `${emails.length} ${emails.length === 1 ? "editor" : "editors"}`));
+    const intro = el("p", "hint admin-intro", "Editors can change the projects you give them. Everyone else can only view, using the share link on each project’s Overview tab.");
 
-    const rows = accounts.map(a => accountRow(a, projectsOf(a.email), me, { say, done, btn }));
     const list = el("section", "admin-section");
-    list.append(...(rows.length ? rows : [el("p", "hint", "Nobody yet.")]));
-    const warn = Auth.linksBroken()
-      ? el("p", "form-error", "You’re on localhost, so invitation links would open localhost on other people’s devices and fail. Set siteUrl in config.js to your live address first.")
-      : el("span");
-    root.replaceChildren(head, warn, inviteForm(projects, reportInvite, done, say), message, list);
+    list.append(...(emails.length ? emails.map(email => row(email, members, titles, signedUp.has(email), { say, done, btn })) : [el("p", "hint", "No editors yet.")]));
+
+    root.replaceChildren(head, intro, addForm(projects, say, done), message, list);
   }
 
-  function accountRow(a, projects, me, { say, done, btn }) {
-    const removed = a.status === "revoked";
-    const waiting = a.status === "pending";
-    const unjoined = a.status === "invited" || (!a.joined && a.status === "approved");
+  function row(email, members, titles, hasAccount, { say, done, btn }) {
+    const mine = members.filter(m => m.email === email && titles.has(m.project_id));
 
-    const who = el("strong", null, a.name || a.email);
-    if (a.admin) who.append(" ", el("span", "badge", "Admin"));
-    if (removed) who.append(" ", el("span", "badge badge-pending", "Access removed"));
-    else if (waiting) who.append(" ", el("span", "badge badge-pending", "Waiting for approval"));
-    else if (unjoined) who.append(" ", el("span", "badge badge-pending", "Invited, not signed up"));
+    const who = el("strong", null, email);
+    if (!hasAccount) who.append(" ", el("span", "badge badge-pending", "Hasn’t signed in yet"));
 
-    const info = el("span", "crew-info");
-    info.append(who);
-    if (a.name) info.append(el("small", null, a.email));
-    info.append(el("small", null, a.phone ? `Phone: ${a.phone}` : "Phone: not given"));
-    info.append(el("small", null, projects.length
-      ? "Projects: " + projects.map(p => `${p.title} (${p.role === "editor" ? "editor" : "viewer"})`).join(", ")
-      : a.admin ? "Projects: all (admin)" : "Projects: none"));
+    const projects = el("span", "admin-projects");
+    if (!mine.length) projects.append(el("small", null, "No projects"));
+    mine.forEach(m => {
+      const chip = el("span", "admin-chip", titles.get(m.project_id));
+      const x = el("button", "admin-chip-x", "×"); x.type = "button";
+      x.ariaLabel = `Remove ${email} from ${titles.get(m.project_id)}`;
+      x.onclick = async () => {
+        if (!confirm(`Take ${email} off “${titles.get(m.project_id)}”?`)) return;
+        const { error } = await db().from("project_members").delete().eq("project_id", m.project_id).eq("email", email);
+        if (error) say(error.message); else done(`${email} can no longer edit “${titles.get(m.project_id)}”.`);
+      };
+      chip.append(x); projects.append(chip);
+    });
 
+    const info = el("span", "crew-info"); info.append(who, projects);
     const person = el("span", "crew-person");
-    person.append(el("span", "avatar avatar-lg", Crew.initials(a.name || a.email)), info);
+    person.append(el("span", "avatar avatar-lg", Crew.initials(email)), info);
 
-    const controls = [];
-    if (a.id === me.id) controls.push(el("span", "hint", "You"));
-    else {
-      if (waiting) controls.push(btn("Approve", "btn btn-ghost", async () => {
-        const { error } = await db().from("profiles").update({ status: "approved" }).eq("id", a.id);
-        if (error) say(error.message); else done("Approved.");
-      }));
-      controls.push(btn("Remove access", "btn btn-danger", async () => {
-        if (!confirm(`Remove access for ${a.name || a.email}? This deletes their account and they won’t be able to sign in. You can invite them again later.`)) return;
-        const result = await Auth.deleteAccount(a.email);
-        if (result.error) say(result.error); else done(`${a.name || a.email}’s account was deleted.`);
-      }));
-    }
+    const remove = btn("Remove", "btn btn-danger", async () => {
+      if (!confirm(`Remove ${email}? This deletes their account and they won’t be able to sign in. You can add them again later.`)) return;
+      const { error } = await db().rpc("remove_editor", { p_email: email });
+      if (error) say(/function .*remove_editor|schema cache/i.test(error.message) ? "Run supabase/step6_share_and_editors.sql in the SQL Editor first." : error.message);
+      else done(`${email} was removed.`);
+    });
+    const actions = el("span", "admin-actions"); actions.append(remove);
 
     const r = el("div", "admin-row");
-    const actions = el("span", "admin-actions"); actions.append(...controls);
     r.append(person, actions);
     return r;
   }
 
-  function inviteForm(projects, reportInvite, done, say) {
+  function addForm(projects, say, done) {
     const form = el("form", "admin-add");
     const email = el("input", "search"); email.type = "email"; email.required = true;
-    email.placeholder = "Invite by email"; email.ariaLabel = "Email to invite";
+    email.placeholder = "Editor’s email"; email.ariaLabel = "Editor’s email";
     const project = el("select", "select"); project.ariaLabel = "Project";
+    project.append(new Option("All projects", ALL));
     projects.forEach(p => project.append(new Option(p.title, p.id)));
-    project.value = projects.some(p => p.id === chosen) ? chosen : (Projects.active()?.id || projects[0]?.id || "");
+    project.value = chosen === ALL || projects.some(p => p.id === chosen) ? chosen : ALL;
     project.onchange = () => { chosen = project.value; };
-    const role = el("select", "select"); role.ariaLabel = "Role";
-    ROLES.forEach(([value, label]) => role.append(new Option(label, value)));
-    const submit = el("button", "btn btn-primary", "Add and send link");
-    form.append(email, project, role, submit);
-    if (!projects.length) [email, project, role, submit].forEach(c => { c.disabled = true; });
+    const submit = el("button", "btn btn-primary", "Add editor");
+    form.append(email, project, submit);
+    if (!projects.length) [email, project, submit].forEach(c => { c.disabled = true; });
 
     form.onsubmit = async e => {
       e.preventDefault();
-      submit.disabled = true; say("Sending…", true);
+      submit.disabled = true;
       const address = email.value.trim().toLowerCase();
-      const title = projects.find(p => p.id === project.value)?.title || "the project";
-      reportInvite(await Auth.invite(address, project.value, role.value), address, title, done);
+      const targets = project.value === ALL ? projects : projects.filter(p => p.id === project.value);
+      const { error } = await db().from("project_members")
+        .upsert(targets.map(p => ({ project_id: p.id, email: address, role: "editor" })), { onConflict: "project_id,email" });
+      if (error) { submit.disabled = false; return say(error.message); }
+      await db().from("profiles").update({ status: "approved" }).eq("email", address); // in case they were removed before
+      done(`${address} is now an editor. They can sign in at ${Auth.siteUrl()} with a code sent to that email.`);
     };
     return form;
-  }
-
-  function linkBox(link) {
-    const box = el("div", "admin-link");
-    const input = el("input", "search"); input.value = link; input.readOnly = true; input.ariaLabel = "Invitation link";
-    input.onfocus = () => input.select();
-    const copy = el("button", "btn btn-ghost", "Copy");
-    copy.type = "button";
-    copy.onclick = async () => {
-      try { await navigator.clipboard.writeText(link); } catch { input.select(); document.execCommand("copy"); }
-      copy.textContent = "Copied";
-    };
-    box.append(input, copy);
-    return box;
   }
 
   return { render };

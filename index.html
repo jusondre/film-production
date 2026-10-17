@@ -6,40 +6,46 @@
   <title>Film Production</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/tokens.css?v=7">
-  <link rel="stylesheet" href="css/base.css?v=7">
-  <link rel="stylesheet" href="css/layout.css?v=7">
-  <link rel="stylesheet" href="css/calendar.css?v=7">
-  <link rel="stylesheet" href="css/tasks.css?v=7">
-  <link rel="stylesheet" href="css/crew.css?v=7">
-  <link rel="stylesheet" href="css/overview.css?v=7">
-  <link rel="stylesheet" href="css/files.css?v=7">
-  <link rel="stylesheet" href="css/visualize.css?v=7">
-  <link rel="stylesheet" href="css/shotlist.css?v=7">
-  <link rel="stylesheet" href="css/auth.css?v=7">
-  <link rel="stylesheet" href="css/admin.css?v=7">
-  <link rel="stylesheet" href="css/access.css?v=7">
+  <link rel="stylesheet" href="css/tokens.css?v=8">
+  <link rel="stylesheet" href="css/base.css?v=8">
+  <link rel="stylesheet" href="css/layout.css?v=8">
+  <link rel="stylesheet" href="css/calendar.css?v=8">
+  <link rel="stylesheet" href="css/tasks.css?v=8">
+  <link rel="stylesheet" href="css/crew.css?v=8">
+  <link rel="stylesheet" href="css/overview.css?v=8">
+  <link rel="stylesheet" href="css/files.css?v=8">
+  <link rel="stylesheet" href="css/visualize.css?v=8">
+  <link rel="stylesheet" href="css/shotlist.css?v=8">
+  <link rel="stylesheet" href="css/auth.css?v=8">
+  <link rel="stylesheet" href="css/admin.css?v=8">
+  <link rel="stylesheet" href="css/access.css?v=8">
 </head>
 <body>
   <div id="gate" class="gate"><p class="gate-sub">Loading…</p></div>
 
   <div id="app" hidden>
+    <div id="preview-bar" class="preview-bar" hidden>
+      <span>You’re previewing what viewers see. Nothing can be changed here.</span>
+      <button class="preview-exit" id="preview-exit">Exit preview</button>
+    </div>
     <header class="topbar">
       <span class="brand">Film Production</span>
       <div class="project-switch">
         <select id="project-select" aria-label="Project" hidden></select>
+        <span id="viewer-title" class="viewer-title" hidden></span>
         <span id="role-note" class="role-note"></span>
       </div>
       <div class="topbar-right">
         <span id="save-status" class="save-status"></span>
+        <button class="btn btn-primary" id="viewer-signin" hidden>Editor sign-in</button>
         <div class="profile-menu" id="profile-menu">
           <button class="profile-btn" id="profile-btn" aria-haspopup="menu" aria-expanded="false">Profile <span aria-hidden="true">&#9662;</span></button>
           <div class="menu" id="menu" role="menu" hidden>
             <div class="menu-head"><span id="user-name" class="user-name"></span></div>
             <button class="menu-item" role="menuitem" id="new-project">New project</button>
             <button class="menu-item" role="menuitem" id="admin-open" hidden>Admin</button>
+            <button class="menu-item" role="menuitem" id="preview-toggle" hidden>View as viewer</button>
             <button class="menu-item" role="menuitem" id="theme-toggle">Dark mode</button>
-            <button class="menu-item" role="menuitem" id="change-password">Change password</button>
             <button class="menu-item" role="menuitem" id="sign-out">Sign out</button>
           </div>
         </div>
@@ -70,7 +76,6 @@
   <dialog id="crew-dialog" class="dialog">
     <form method="dialog" id="crew-form">
       <h3 id="crew-dialog-title">Add crew member</h3>
-      <label id="crew-pick-wrap" hidden>Team member <select name="pick"></select></label>
       <label>Name <input name="name" required></label>
       <label>Role <input name="role" placeholder="e.g. Director of photography"></label>
       <div class="field-row">
@@ -135,20 +140,6 @@
     </form>
   </dialog>
 
-  <dialog id="password-dialog" class="dialog">
-    <form method="dialog" id="password-form">
-      <h3>Change password</h3>
-      <label>New password <input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
-      <label>Repeat it <input name="confirm" type="password" autocomplete="new-password" minlength="8" required></label>
-      <p id="password-note" class="form-error" role="alert"></p>
-      <div class="dialog-actions">
-        <span class="spacer"></span>
-        <button class="btn btn-ghost" type="button" data-cancel>Cancel</button>
-        <button class="btn btn-primary" value="ok">Save password</button>
-      </div>
-    </form>
-  </dialog>
-
   <dialog id="prompt-dialog" class="dialog">
     <form method="dialog" id="prompt-form">
       <h3 id="prompt-title"></h3>
@@ -192,25 +183,25 @@
     </form>
   </dialog>
 
-  <script src="js/dom.js?v=7"></script>
-  <script src="js/images.js?v=7"></script>
-  <script src="js/storage.js?v=7"></script>
-  <script src="js/theme.js?v=7"></script>
-  <script src="js/projects.js?v=7"></script>
-  <script src="js/dialogs.js?v=7"></script>
-  <script src="js/overview.js?v=7"></script>
-  <script src="js/files.js?v=7"></script>
-  <script src="js/crew.js?v=7"></script>
-  <script src="js/calendar.js?v=7"></script>
-  <script src="js/tasks.js?v=7"></script>
-  <script src="js/moodboards.js?v=7"></script>
-  <script src="js/storyboard.js?v=7"></script>
-  <script src="js/shotlist.js?v=7"></script>
-  <script src="js/visualize.js?v=7"></script>
-  <script src="config.js?v=7"></script>
+  <script src="js/dom.js?v=8"></script>
+  <script src="js/images.js?v=8"></script>
+  <script src="js/storage.js?v=8"></script>
+  <script src="js/theme.js?v=8"></script>
+  <script src="js/projects.js?v=8"></script>
+  <script src="js/dialogs.js?v=8"></script>
+  <script src="js/overview.js?v=8"></script>
+  <script src="js/files.js?v=8"></script>
+  <script src="js/crew.js?v=8"></script>
+  <script src="js/calendar.js?v=8"></script>
+  <script src="js/tasks.js?v=8"></script>
+  <script src="js/moodboards.js?v=8"></script>
+  <script src="js/storyboard.js?v=8"></script>
+  <script src="js/shotlist.js?v=8"></script>
+  <script src="js/visualize.js?v=8"></script>
+  <script src="config.js?v=8"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-  <script src="js/auth.js?v=7"></script>
-  <script src="js/admin.js?v=7"></script>
-  <script src="js/app.js?v=7"></script>
+  <script src="js/auth.js?v=8"></script>
+  <script src="js/admin.js?v=8"></script>
+  <script src="js/app.js?v=8"></script>
 </body>
 </html>

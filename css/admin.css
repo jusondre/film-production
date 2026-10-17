@@ -24,3 +24,9 @@
 .admin-row .crew-info small { display: block; line-height: 1.5; }
 .admin-actions { padding-top: 4px; }
 .admin-row .crew-info small { white-space: normal; overflow: visible; }
+.admin-intro { max-width: 640px; margin: 0 0 20px; }
+.admin-projects { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.admin-projects small { color: var(--muted); font-size: 13px; }
+.admin-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; font-size: 13px; background: var(--fill); border-radius: 99px; }
+.admin-chip-x { font: inherit; line-height: 1; color: var(--muted); background: none; border: 0; border-radius: 99px; padding: 2px 7px; cursor: pointer; }
+.admin-chip-x:hover { color: var(--ink); background: var(--line); }

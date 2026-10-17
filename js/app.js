@@ -41,10 +41,18 @@ const App = (() => {
 
   function render() {
     const project = Projects.active();
+    const viewing = Boolean(Projects.shared());
     Projects.renderSelect($("project-select"));
     document.body.classList.toggle("is-viewer", Boolean(project) && !Projects.canEdit());
     $("role-note").textContent = project && !Projects.canEdit() ? "View only" : "";
-    $("admin-open").hidden = !Auth.isAdmin();
+    $("viewer-title").hidden = !viewing; $("viewer-title").textContent = project?.title || "";
+    if (viewing) $("project-select").hidden = true;
+    const previewing = Projects.previewing();
+    $("preview-bar").hidden = !previewing;
+    $("preview-toggle").hidden = !Auth.isAdmin() || !project;
+    $("preview-toggle").textContent = previewing ? "Exit viewer preview" : "View as viewer";
+    $("new-project").hidden = !Auth.isAdmin() || previewing;
+    $("admin-open").hidden = !Auth.isAdmin() || previewing;
     $("admin-open").textContent = adminOpen ? "Back to project" : "Admin";
     const view = $("view");
     if (adminOpen && Auth.isAdmin()) { $("tabs").hidden = true; return Admin.render(view); }
@@ -53,6 +61,7 @@ const App = (() => {
     const tab = tabs().find(t => t.id === activeTab) || tabs()[0];
 
     if (!project) {
+      if (viewing) return renderEmpty(view, "This link isn’t active", "The link may have been replaced. Ask for the newest view link.");
       return Auth.isAdmin()
         ? renderEmpty(view, "Start your first film", "Create a project to keep its details, crew, shoot days, tasks, boards and files in one place.",
             { label: "New project", run: openProjectDialog })
@@ -71,7 +80,6 @@ const App = (() => {
   async function enter() {
     const me = Auth.profile();
     $("user-name").textContent = me.full_name || me.email;
-    $("new-project").hidden = !Auth.isAdmin();
     Projects.onStatus(text => { $("save-status").textContent = text; });
     try {
       await Projects.load();
@@ -79,6 +87,22 @@ const App = (() => {
       return renderEmpty($("view"), "Couldn’t load projects", `${error.message}. If this is a new setup, run supabase/step2_projects.sql.`);
     }
     Projects.startSync(render);
+    render();
+  }
+
+  /* Runs instead of enter() when the page was opened from a project's view link: nobody is signed in. */
+  async function enterViewer(token) {
+    $("new-project").hidden = $("admin-open").hidden = $("preview-toggle").hidden = $("sign-out").hidden = true;
+    $("user-name").parentElement.hidden = true;
+    $("profile-btn").firstChild.textContent = "Menu ";
+    $("viewer-signin").hidden = false;
+    $("viewer-signin").onclick = () => { location.href = location.pathname; };
+    try {
+      await Projects.loadShared(token);
+    } catch (error) {
+      return renderEmpty($("view"), "Couldn’t open this link", `${error.message}. If this is a new setup, run supabase/step6_share_and_editors.sql.`);
+    }
+    Projects.startSharedSync(render);
     render();
   }
 
@@ -108,21 +132,9 @@ const App = (() => {
       } catch (error) { alert(error.message); }
     };
     $("sign-out").onclick = Auth.signOut;
-    $("change-password").onclick = () => {
-      $("password-form").reset(); $("password-note").textContent = "";
-      $("password-dialog").returnValue = ""; $("password-dialog").showModal();
-    };
-    $("password-form").onsubmit = async e => {
-      e.preventDefault();
-      const f = e.target.elements, note = $("password-note");
-      if (f.password.value.length < 8) return void (note.textContent = "Use at least 8 characters.");
-      if (f.password.value !== f.confirm.value) return void (note.textContent = "The two passwords don’t match.");
-      const { error } = await Auth.changePassword(f.password.value);
-      if (error) return void (note.textContent = error.message);
-      $("password-dialog").close("ok");
-      alert("Your password has been updated.");
-    };
-    Auth.start(enter);
+    $("preview-toggle").onclick = () => { Projects.setPreview(!Projects.previewing()); adminOpen = false; render(); };
+    $("preview-exit").onclick = () => { Projects.setPreview(false); render(); };
+    Auth.start(enter, { viewToken: new URLSearchParams(location.search).get("view"), onViewer: enterViewer });
   }
   return { init };
 })();

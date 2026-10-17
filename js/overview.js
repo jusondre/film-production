@@ -64,6 +64,32 @@ const Overview = (() => {
     return bind(control, details, key, editable);
   }
 
+  /* The view link for this project: anyone who opens it can look, nobody can change anything. */
+  function shareBox(project) {
+    const url = () => `${Auth.siteUrl()}?view=${project.shareToken}`;
+    const box = el("div", "ov-share");
+    box.append(el("h4", null, "Share link for viewers"),
+      el("p", "hint", "Anyone with this link can view this project, but not change it. They don’t need an account."));
+    const input = el("input", "search"); input.readOnly = true; input.value = url(); input.ariaLabel = "View link";
+    input.onfocus = () => input.select();
+    const copy = el("button", "btn btn-primary", "Copy link"); copy.type = "button";
+    copy.onclick = async () => {
+      try { await navigator.clipboard.writeText(input.value); } catch { input.select(); document.execCommand("copy"); }
+      copy.textContent = "Copied"; setTimeout(() => { copy.textContent = "Copy link"; }, 2000);
+    };
+    const row = el("div", "admin-link"); row.append(input, copy);
+    if (Auth.isAdmin()) {
+      const fresh = el("button", "btn btn-ghost", "New link"); fresh.type = "button";
+      fresh.onclick = async () => {
+        if (!confirm("Make a new link? The current link stops working for everyone who has it.")) return;
+        try { await Projects.newShareLink(); input.value = url(); } catch (error) { alert(error.message); }
+      };
+      row.append(fresh);
+    }
+    box.append(row);
+    return box;
+  }
+
   function render(root, project) {
     const details = project.details ||= {};
     const editable = Projects.canEdit();
@@ -94,8 +120,9 @@ const Overview = (() => {
       field("Notes", area(7, details, "notes", editable, "Anything the team should know: budget status, contacts, decisions")));
 
     const parts = [head, summary(project), form];
+    if (editable && project.shareToken) parts.push(shareBox(project));
 
-    if (Auth.isAdmin()) {
+    if (Auth.isAdmin() && !Projects.previewing()) {
       const danger = el("div", "ov-danger");
       const del = el("button", "btn btn-danger", "Delete project");
       del.onclick = async () => {

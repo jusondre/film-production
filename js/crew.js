@@ -61,40 +61,11 @@ const Crew = (() => {
     return r;
   }
 
-  /* People who have joined this project (plus you), minus anyone already in the crew list. */
-  async function availablePeople(project) {
-    const me = Auth.profile();
-    const { data } = await Auth.client().rpc("project_people", { pid: project.id });
-    const people = (data || []).filter(p => p.joined).map(p => ({ name: p.full_name || "", email: p.email, phone: p.phone || "" }));
-    if (me && !people.some(p => p.email === me.email)) people.unshift({ name: me.full_name || "", email: me.email, phone: me.phone || "", you: true });
-    const taken = new Set(project.crew.map(c => (c.email || "").toLowerCase()).filter(Boolean));
-    return people.filter(p => !taken.has(p.email.toLowerCase()));
-  }
-
-  /* Choosing a team member fills in their details, so only the role is left to type. */
-  function setupPicker(dialog, form, project) {
-    const wrap = $("crew-pick-wrap"), pick = form.elements.pick;
-    wrap.hidden = true;
-    availablePeople(project).then(people => {
-      if (!dialog.open || !people.length) return;
-      pick.replaceChildren(new Option("Choose someone, or fill in the details below", ""),
-        ...people.map((p, i) => new Option(`${p.name || p.email}${p.you ? " (you)" : ""}`, i)));
-      pick.onchange = () => {
-        const chosen = people[pick.value];
-        if (!chosen) return;
-        form.elements.name.value = chosen.name; form.elements.email.value = chosen.email; form.elements.phone.value = chosen.phone;
-        form.elements.role.focus();
-      };
-      wrap.hidden = false;
-    }).catch(() => {});
-  }
-
   function openDialog(root, project, member = null) {
     const dialog = $("crew-dialog"), form = $("crew-form");
     $("crew-dialog-title").textContent = member ? "Edit crew member" : "Add crew member";
     $("crew-delete").hidden = !member;
     for (const key of ["name", "role", "email", "phone"]) form.elements[key].value = member?.[key] || "";
-    $("crew-pick-wrap").hidden = true;
 
     form.onsubmit = () => {
       const fields = Object.fromEntries(["name", "role", "email", "phone"].map(k => [k, form.elements[k].value.trim()]));
@@ -109,7 +80,6 @@ const Crew = (() => {
     };
     dialog.returnValue = "";
     dialog.showModal();
-    if (!member) setupPicker(dialog, form, project);
   }
 
   return { render, initials, nameOf };

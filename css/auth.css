@@ -19,3 +19,5 @@
 
 .gate-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .gate-input[readonly] { color: var(--muted); }
+.gate-code { text-align: center; font-size: 20px; letter-spacing: 4px; }
+.gate-code::placeholder { font-size: 15px; letter-spacing: 0; }
