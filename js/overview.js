@@ -99,10 +99,9 @@ const Overview = (() => {
       const danger = el("div", "ov-danger");
       const del = el("button", "btn btn-danger", "Delete project");
       del.onclick = async () => {
-        if (!confirm(`Delete “${project.title}” with its crew, calendar, tasks, boards and files? This can’t be undone.`)) return;
+        if (!confirm(`Delete “${project.title}” with its crew, calendar, tasks, boards and equipment? This can’t be undone.`)) return;
         del.disabled = true;
         try {
-          await Files.removeAll(project.id);
           await Projects.remove();
           Projects.refresh();
         } catch (error) { del.disabled = false; alert(error.message); }

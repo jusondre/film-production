@@ -25,3 +25,20 @@
 .cal-event span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
 @media (max-width: 760px) { .cal-day { min-height: 70px; } .cal-legend { display: none; } }
+
+/* Day popup: the whole day, large and uncut. */
+.dialog-day { width: min(680px, 94vw); max-height: 88vh; padding: 28px; }
+.dialog-day[open] { display: flex; flex-direction: column; }
+.day-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.dialog-day .day-head h3 { font-size: 26px; margin: 0; }
+.day-count { color: var(--muted); }
+.day-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 2px; }
+.day-event { padding: 16px 18px; border: 1px solid var(--line); border-left: 4px solid var(--ev-color); border-radius: 12px; }
+.day-event.is-editable { cursor: pointer; }
+.day-event.is-editable:hover { background: var(--fill); }
+.day-meta { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.day-meta i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--ev-color); }
+.day-meta b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.day-event h4 { font-size: 19px; margin: 6px 0 0; overflow-wrap: anywhere; }
+.day-notes { margin: 8px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.55; }
+.dialog-day .dialog-actions { flex: none; }

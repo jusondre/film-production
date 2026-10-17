@@ -6,19 +6,19 @@
   <title>Film Production</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/tokens.css?v=10">
-  <link rel="stylesheet" href="css/base.css?v=10">
-  <link rel="stylesheet" href="css/layout.css?v=10">
-  <link rel="stylesheet" href="css/calendar.css?v=10">
-  <link rel="stylesheet" href="css/tasks.css?v=10">
-  <link rel="stylesheet" href="css/crew.css?v=10">
-  <link rel="stylesheet" href="css/overview.css?v=10">
-  <link rel="stylesheet" href="css/files.css?v=10">
-  <link rel="stylesheet" href="css/visualize.css?v=10">
-  <link rel="stylesheet" href="css/shotlist.css?v=10">
-  <link rel="stylesheet" href="css/auth.css?v=10">
-  <link rel="stylesheet" href="css/admin.css?v=10">
-  <link rel="stylesheet" href="css/access.css?v=10">
+  <link rel="stylesheet" href="css/tokens.css?v=11">
+  <link rel="stylesheet" href="css/base.css?v=11">
+  <link rel="stylesheet" href="css/layout.css?v=11">
+  <link rel="stylesheet" href="css/calendar.css?v=11">
+  <link rel="stylesheet" href="css/tasks.css?v=11">
+  <link rel="stylesheet" href="css/crew.css?v=11">
+  <link rel="stylesheet" href="css/overview.css?v=11">
+  <link rel="stylesheet" href="css/equipment.css?v=11">
+  <link rel="stylesheet" href="css/visualize.css?v=11">
+  <link rel="stylesheet" href="css/shotlist.css?v=11">
+  <link rel="stylesheet" href="css/auth.css?v=11">
+  <link rel="stylesheet" href="css/admin.css?v=11">
+  <link rel="stylesheet" href="css/access.css?v=11">
 </head>
 <body>
   <div id="gate" class="gate"><p class="gate-sub">Loading…</p></div>
@@ -108,6 +108,45 @@
     </form>
   </dialog>
 
+  <dialog id="day-dialog" class="dialog dialog-day">
+    <div class="day-head">
+      <h3 id="day-title"></h3>
+      <span id="day-count" class="day-count"></span>
+    </div>
+    <div id="day-list" class="day-list"></div>
+    <div class="dialog-actions">
+      <button class="btn btn-primary" type="button" id="day-add">Add event</button>
+      <span class="spacer"></span>
+      <button class="btn btn-ghost" type="button" data-cancel>Close</button>
+    </div>
+  </dialog>
+
+  <dialog id="equipment-dialog" class="dialog dialog-wide">
+    <form method="dialog" id="equipment-form">
+      <h3 id="equipment-dialog-title">Add equipment</h3>
+      <label>Item <input name="name" required placeholder="e.g. ARRI Alexa Mini"></label>
+      <div class="field-row">
+        <label>Category <select name="category"></select></label>
+        <label>Quantity <input name="quantity" type="number" min="1" step="1" value="1"></label>
+      </div>
+      <div class="field-row">
+        <label>Source <select name="source"></select></label>
+        <label>Status <select name="status"></select></label>
+      </div>
+      <div class="field-row">
+        <label>Supplier or owner <input name="supplier" placeholder="e.g. Rental house, or a name"></label>
+        <label>Cost <input name="cost" placeholder="e.g. €120 per day"></label>
+      </div>
+      <label>Details <textarea name="notes" rows="4" placeholder="Model, accessories, pickup and return, anything to remember"></textarea></label>
+      <div class="dialog-actions">
+        <button class="btn btn-danger" type="button" id="equipment-delete">Remove</button>
+        <span class="spacer"></span>
+        <button class="btn btn-ghost" type="button" data-cancel>Cancel</button>
+        <button class="btn btn-primary" value="ok">Save</button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog id="task-dialog" class="dialog dialog-wide">
     <form method="dialog" id="task-form">
       <input name="title" class="task-title-input" required placeholder="Task name" aria-label="Task name">
@@ -181,24 +220,24 @@
     </form>
   </dialog>
 
-  <script src="js/dom.js?v=10"></script>
-  <script src="js/images.js?v=10"></script>
-  <script src="js/storage.js?v=10"></script>
-  <script src="js/theme.js?v=10"></script>
-  <script src="js/projects.js?v=10"></script>
-  <script src="js/dialogs.js?v=10"></script>
-  <script src="js/overview.js?v=10"></script>
-  <script src="js/files.js?v=10"></script>
-  <script src="js/crew.js?v=10"></script>
-  <script src="js/calendar.js?v=10"></script>
-  <script src="js/tasks.js?v=10"></script>
-  <script src="js/moodboards.js?v=10"></script>
-  <script src="js/storyboard.js?v=10"></script>
-  <script src="js/shotlist.js?v=10"></script>
-  <script src="js/visualize.js?v=10"></script>
-  <script src="config.js?v=10"></script>
+  <script src="js/dom.js?v=11"></script>
+  <script src="js/images.js?v=11"></script>
+  <script src="js/storage.js?v=11"></script>
+  <script src="js/theme.js?v=11"></script>
+  <script src="js/projects.js?v=11"></script>
+  <script src="js/dialogs.js?v=11"></script>
+  <script src="js/overview.js?v=11"></script>
+  <script src="js/equipment.js?v=11"></script>
+  <script src="js/crew.js?v=11"></script>
+  <script src="js/calendar.js?v=11"></script>
+  <script src="js/tasks.js?v=11"></script>
+  <script src="js/moodboards.js?v=11"></script>
+  <script src="js/storyboard.js?v=11"></script>
+  <script src="js/shotlist.js?v=11"></script>
+  <script src="js/visualize.js?v=11"></script>
+  <script src="config.js?v=11"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
-  <script src="js/auth.js?v=10"></script>
-  <script src="js/app.js?v=10"></script>
+  <script src="js/auth.js?v=11"></script>
+  <script src="js/app.js?v=11"></script>
 </body>
 </html>

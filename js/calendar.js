@@ -6,6 +6,7 @@ const Calendar = (() => {
   };
   const MONTH = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
   const WEEKDAY = new Intl.DateTimeFormat("en", { weekday: "short" });
+  const LONG = new Intl.DateTimeFormat("en", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   const now = new Date();
   let cursor = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -58,18 +59,61 @@ const Calendar = (() => {
       if (key === iso(new Date())) cell.classList.add("is-today");
       cell.append(el("span", "cal-num", String(d.getDate())));
 
-      project.events.filter(e => e.date === key).sort(byTime).forEach(ev => {
-        const chip = el("button", "cal-event");
+      const events = project.events.filter(e => e.date === key).sort(byTime);
+      events.forEach(ev => {
+        const chip = el("div", "cal-event");
         chip.append(el("i"), ...(ev.time ? [el("b", null, ev.time)] : []), el("span", null, ev.title));
         chip.style.setProperty("--ev-color", `var(--ev-${ev.type})`);
-        chip.onclick = e => { e.stopPropagation(); openEvent(root, project, key, ev); };
         cell.append(chip);
       });
-      cell.onclick = () => { if (Projects.canEdit()) openEvent(root, project, key); };
+      cell.ariaLabel = `${LONG.format(d)}, ${events.length === 1 ? "1 event" : `${events.length} events`}`;
+      cell.onclick = () => openDay(root, project, key);   // everyone can open a day and read it in full
       cell.onkeydown = e => { if (e.key === "Enter" && e.target === cell) cell.click(); };
       g.append(cell);
     }
     return g;
+  }
+
+  /* The day popup: every event of one day, in full (nothing cut off). Editors can add and open events from here. */
+  function openDay(root, project, date) {
+    const dialog = document.getElementById("day-dialog");
+    const editable = Projects.canEdit();
+    const events = project.events.filter(e => e.date === date).sort(byTime);
+
+    document.getElementById("day-title").textContent = LONG.format(new Date(`${date}T00:00`));
+    document.getElementById("day-count").textContent =
+      events.length === 0 ? "Nothing planned" : events.length === 1 ? "1 event" : `${events.length} events`;
+
+    const list = document.getElementById("day-list");
+    list.replaceChildren(...(events.length
+      ? events.map(ev => dayCard(root, project, dialog, ev, editable))
+      : [el("p", "hint", "Nothing is planned for this day.")]));
+    list.scrollTop = 0;
+
+    document.getElementById("day-add").onclick = () => { dialog.close(); openEvent(root, project, date, null, true); };
+    // Clicking the dimmed area outside the popup closes it.
+    dialog.onclick = e => {
+      const r = dialog.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) dialog.close();
+    };
+    dialog.returnValue = "";
+    if (!dialog.open) dialog.showModal();
+  }
+
+  function dayCard(root, project, dialog, ev, editable) {
+    const card = el("article", "day-event");
+    card.style.setProperty("--ev-color", `var(--ev-${ev.type})`);
+    const meta = el("div", "day-meta");
+    meta.append(el("i"), el("b", null, ev.time || "All day"), el("span", null, TYPES[ev.type] || ev.type));
+    card.append(meta, el("h4", null, ev.title));
+    if (ev.notes && ev.notes.trim()) card.append(el("p", "day-notes", ev.notes));
+    if (editable) {
+      const edit = () => { dialog.close(); openEvent(root, project, ev.date, ev, true); };
+      card.classList.add("is-editable"); card.tabIndex = 0; card.role = "button";
+      card.onclick = edit;
+      card.onkeydown = e => { if (e.key === "Enter") edit(); };
+    }
+    return card;
   }
 
   /* 24-hour entry: keeps digits only and inserts the colon (1430 becomes 14:30). */
@@ -78,11 +122,13 @@ const Calendar = (() => {
     input.value = digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
   }
 
-  function openEvent(root, project, date, ev = null) {
+  function openEvent(root, project, date, ev = null, back = false) {
     const dialog = document.getElementById("event-dialog");
     const form = document.getElementById("event-form");
     const del = document.getElementById("event-delete");
     editingId = ev ? ev.id : null;
+    let backDate = ev?.date || date;
+    dialog.onclose = back ? () => openDay(root, project, backDate) : null;   // return to the day popup when this closes
     document.getElementById("event-dialog-title").textContent = ev ? "Edit event" : "Add event";
     del.hidden = !ev;
     form.elements.type.replaceChildren(...Object.entries(TYPES).map(([v, l]) => new Option(l, v)));
@@ -99,6 +145,7 @@ const Calendar = (() => {
         title: form.elements.title.value.trim(), date: form.elements.date.value, time: form.elements.time.value,
         type: form.elements.type.value, notes: form.elements.notes.value,
       };
+      backDate = fields.date || backDate;
       if (editingId) Object.assign(project.events.find(e => e.id === editingId), fields);
       else project.events.push({ id: crypto.randomUUID(), ...fields });
       Projects.persist(true); render(root, project);

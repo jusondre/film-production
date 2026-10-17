@@ -16,7 +16,7 @@ There are no passwords, no sign-up, no invitations and no emails to send. Roles 
 6. In your server, make sure there is a role named **admin** and give it to the people who should edit.
 
 ## 2. Supabase
-1. SQL Editor: if this is a brand-new project run `setup.sql`, `step2_projects.sql`, `step4_files.sql` first. Then run **`step7_discord.sql`**.
+1. SQL Editor: if this is a brand-new project run `setup.sql` and `step2_projects.sql` first (`step4_files.sql` is no longer needed: the Files tab was replaced by Equipment, which is saved inside each project and needs no extra SQL). Then run **`step7_discord.sql`**.
 2. Authentication, Sign In / Providers, **Discord**: switch on, paste the Client ID and Client Secret, save.
    Make sure "Allow new users to sign up" is **on** (Discord sign-in creates the account; the server check decides who gets in).
 3. Authentication, URL Configuration: Site URL = `https://jusondre.github.io/film-production/` and add the same address under Redirect URLs.

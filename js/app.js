@@ -9,7 +9,7 @@ const App = (() => {
     { id: "calendar", label: "Calendar", render: Calendar.render },
     { id: "tasks", label: "Tasks", render: Tasks.render },
     { id: "visualize", label: "Visualize", render: Visualize.render },
-    { id: "files", label: "Files", render: Files.render },
+    { id: "equipment", label: "Equipment", render: Equipment.render },
   ];
   const tabs = () => BASE_TABS;
   let activeTab = "overview";
@@ -55,7 +55,7 @@ const App = (() => {
 
     if (!project) {
       return Auth.isAdmin()
-        ? renderEmpty(view, "Start your first film", "Create a project to keep its details, crew, shoot days, tasks, boards and files in one place.",
+        ? renderEmpty(view, "Start your first film", "Create a project to keep its details, crew, shoot days, tasks, boards and equipment in one place.",
             { label: "New project", run: openProjectDialog })
         : renderEmpty(view, "No projects yet", "Nothing has been added here yet. Check back soon.");
     }
