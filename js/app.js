@@ -22,6 +22,7 @@ const App = (() => {
       b.onclick = () => { activeTab = t.id; render(); };
       return b;
     }));
+    $("tabs").querySelector('[aria-selected="true"]')?.scrollIntoView({ inline: "nearest", block: "nearest" });
   }
 
   function renderEmpty(view, title, body, action) {

@@ -63,4 +63,4 @@
 .icon-btn { background: none; border: 0; cursor: pointer; color: var(--muted); font-size: 18px; line-height: 1; }
 .icon-btn:hover { color: var(--ink); }
 
-@media (max-width: 760px) { .board { grid-template-columns: 1fr; } .task-fields { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .board { grid-template-columns: 1fr; } .task-fields { grid-template-columns: 1fr; } .column { min-height: 0; } .task-card { cursor: pointer; } }

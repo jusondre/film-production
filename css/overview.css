@@ -17,3 +17,8 @@ textarea.ov-input { resize: none; overflow: hidden; display: block; }
 
 .ov-danger { display: flex; align-items: center; gap: 16px; max-width: 760px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); }
 
+
+@media (max-width: 760px) {
+  .ov-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+  .ov-danger { flex-wrap: wrap; }
+}

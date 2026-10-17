@@ -14,6 +14,6 @@
 .eq-status[data-status="Returned"] { color: var(--muted); }
 
 @media (max-width: 760px) {
-  .eq-row { grid-template-columns: minmax(0, 1fr) 40px auto; }
+  .eq-row { grid-template-columns: minmax(0, 1fr) 36px auto; padding: 14px 8px; gap: 12px; }
   .eq-row > :nth-child(3), .eq-row > :nth-child(5) { display: none; }
 }

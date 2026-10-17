@@ -69,7 +69,7 @@ const ShotList = (() => {
   }
 
   function shotRow(root, project, sc, shot, sceneIndex, shotIndex) {
-    const tr = el("tr"); tr.tabIndex = 0;
+    const tr = el("tr"); tr.tabIndex = 0; tr.dataset.no = `Scene ${sceneIndex + 1}, shot ${shotIndex + 1}`;
     tr.onclick = () => openShot(root, project, sc, shot);
     tr.onkeydown = e => { if (e.key === "Enter") tr.click(); };
 

@@ -42,3 +42,18 @@
   font: inherit; color: var(--ink); background: transparent; border: 0; border-radius: 8px;
 }
 .frame-caption:focus { background: var(--surface); }
+
+.frame-tools { display: flex; align-items: center; gap: 4px; }
+.touch-only { display: none; }
+@media (hover: none) {
+  .tile-remove { opacity: 1; width: 32px; height: 32px; }
+  .touch-only { display: inline-block; }
+}
+@media (max-width: 760px) {
+  .subtabs { display: flex; width: 100%; }
+  .subtab { flex: 1; padding: 6px 8px; }
+  .vis-head h3, .title-input { font-size: 24px; }
+  .masonry { columns: 2 140px; column-gap: 8px; }
+  .tile { margin-bottom: 8px; }
+  .frames { grid-template-columns: minmax(0, 1fr); }
+}

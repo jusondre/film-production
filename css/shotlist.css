@@ -28,4 +28,27 @@
 .chip[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); }
 .shot-gear { margin-top: 12px; }
 
-@media (max-width: 760px) { .shot-top, .chip-columns { grid-template-columns: 1fr; } }
+@media (max-width: 760px) {
+  .shot-top, .chip-columns { grid-template-columns: 1fr; }
+  /* One block per shot: picture on the left, number, description and gear on the right. */
+  .table-wrap { overflow: visible; background: none; border-radius: 0; }
+  .shots { display: block; min-width: 0; }
+  .shots thead { display: none; }
+  .shots tbody { display: block; }
+  .shots tbody tr {
+    display: grid; grid-template-columns: 88px repeat(3, minmax(0, 1fr)); gap: 2px 12px; align-items: start;
+    grid-template-areas: "pic no no no" "pic desc desc desc" "pic size lens move";
+    padding: 12px 0; border-top: 1px solid var(--line);
+  }
+  .shots tbody tr::before { content: attr(data-no); grid-area: no; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .shots td { display: block; min-width: 0; padding: 0; border: 0; font-size: 14px; overflow-wrap: anywhere; }
+  .shots tbody tr:hover td { background: none; }
+  .shots td:nth-child(1) { grid-area: pic; }
+  .shots td:nth-child(2), .shots td:nth-child(3) { display: none; }
+  .shots td:nth-child(4) { grid-area: desc; }
+  .shots td:nth-child(5) { grid-area: size; }
+  .shots td:nth-child(6) { grid-area: lens; }
+  .shots td:nth-child(7) { grid-area: move; }
+  .shots td:nth-child(n+5) { font-size: 13px; color: var(--muted); }
+  .scene-head { flex-wrap: wrap; }
+}

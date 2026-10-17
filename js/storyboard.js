@@ -30,11 +30,23 @@ const StoryBoard = (() => {
     const card = el("article", "frame");
 
     const head = el("div", "frame-head");
-    head.draggable = Projects.canEdit(); head.title = "Drag to reorder";
+    head.draggable = Projects.canEdit() && !matchMedia("(pointer: coarse)").matches; head.title = "Drag to reorder";
     head.ondragstart = e => { e.dataTransfer.setData("text/plain", f.id); e.dataTransfer.setDragImage(card, 20, 20); };
     const rm = el("button", "icon-btn", "×"); rm.ariaLabel = "Remove frame";
     rm.onclick = () => { project.frames = project.frames.filter(x => x !== f); save(); };
-    head.append(el("span", null, `Frame ${index + 1}`), rm);
+    // Touch screens can't drag, so frames also get earlier / later buttons there.
+    const move = (label, text, step) => {
+      const b = el("button", "icon-btn touch-only", text); b.type = "button"; b.ariaLabel = label;
+      b.onclick = () => {
+        const from = project.frames.indexOf(f), to = from + step;
+        if (to < 0 || to >= project.frames.length) return;
+        project.frames.splice(to, 0, project.frames.splice(from, 1)[0]); save();
+      };
+      return b;
+    };
+    const tools = el("span", "frame-tools");
+    tools.append(move("Move frame earlier", "‹", -1), move("Move frame later", "›", 1), rm);
+    head.append(el("span", null, `Frame ${index + 1}`), tools);
 
     const pic = el("button", "pic");
     if (f.src) { const img = el("img"); img.src = f.src; img.alt = ""; pic.append(img); } else pic.textContent = "Add image";

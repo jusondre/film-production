@@ -82,7 +82,7 @@ const Tasks = (() => {
 
   function card(root, project, task, status, today) {
     const c = el("div", "task-card");
-    c.draggable = Projects.canEdit(); c.tabIndex = 0; c.role = "button";
+    c.draggable = Projects.canEdit() && !matchMedia("(pointer: coarse)").matches; c.tabIndex = 0;   // touch screens change status in the task panel c.role = "button";
     c.ondragstart = e => { e.dataTransfer.setData("text/plain", task.id); e.dataTransfer.effectAllowed = "move"; c.classList.add("is-dragging"); };
     c.ondragend = () => c.classList.remove("is-dragging");
     c.onclick = () => openTask(root, project, task);
