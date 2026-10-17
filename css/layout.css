@@ -52,4 +52,3 @@
 .preview-bar { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 10px 20px; font-size: 14px; color: var(--bg); background: var(--ink); }
 .preview-bar[hidden] { display: none; }
 .preview-exit { font: 600 14px var(--font); color: var(--ink); background: var(--bg); border: 0; border-radius: var(--radius); padding: 5px 12px; cursor: pointer; }
-.viewer-title { font: 600 15px var(--font); }

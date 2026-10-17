@@ -5,12 +5,13 @@ const Auth = (() => {
   const cfg = window.APP_CONFIG || {};
   const configured = /^https:\/\/.+\.supabase\.co/.test(cfg.supabaseUrl || "")
     && Boolean(cfg.supabaseAnonKey) && !cfg.supabaseAnonKey.startsWith("YOUR");
-  /* The live address of the site: used in view links, whatever address the admin is working from. */
-  const siteUrl = () => (cfg.siteUrl || "").trim() || location.origin + location.pathname;
+  /* The live address of the site. Emails and links always use it, never localhost. */
+  const LIVE = "https://jusondre.github.io/film-production/";
+  const siteUrl = () => (cfg.siteUrl || "").trim() || LIVE;
 
   let client = null;
   let profile = null;
-  let onApproved = () => {};
+  let onReady = () => {};
 
   const isAdmin = () => profile?.role === "admin" && profile?.status === "approved";
 
@@ -41,6 +42,7 @@ const Auth = (() => {
     const row = el("div", "gate-actions"); row.append(...actions);
     return card(el("h1", null, title), el("p", "gate-sub", body), row);
   }
+  function showApp() { $("gate").hidden = true; $("app").hidden = false; }
   function note() {
     const p = el("p", "gate-note"); p.setAttribute("role", "alert");
     return p;
@@ -59,14 +61,16 @@ const Auth = (() => {
       e.preventDefault();
       submit.disabled = true; problem.textContent = "";
       const address = email.value.trim().toLowerCase();
-      const { error } = await client.auth.signInWithOtp({ email: address, options: { shouldCreateUser: true } });
+      const { error } = await client.auth.signInWithOtp({ email: address, options: { shouldCreateUser: true, emailRedirectTo: siteUrl() } });
       if (error) { submit.disabled = false; problem.textContent = friendly(error); return; }
       showGate(codeScreen(address));
     };
+    const links = el("div", "gate-links");
+    links.append(button("Back to the projects", "link-btn", showApp));
     return card(
       el("h1", null, "Editor sign-in."),
-      el("p", "gate-sub", "Enter your email and we’ll send you a code. No password needed. Just want to look at a project? Open the view link you were sent."),
-      form, problem);
+      el("p", "gate-sub", "Enter your email and we’ll send you a code. No password needed."),
+      form, problem, links);
   }
 
   function codeScreen(address) {
@@ -99,33 +103,34 @@ const Auth = (() => {
   /* ---------- session ---------- */
   async function refresh() {
     const { data: { session } } = await client.auth.getSession();
-    if (!session) { profile = null; return showGate(loginScreen()); }
+    // Not signed in: anyone can look at the projects straight away. Editors use the Sign in button.
+    if (!session) { profile = null; showApp(); return onReady(); }
 
     const { data, error } = await client.from("profiles").select("*").eq("id", session.user.id).maybeSingle();
     if (error) return showGate(errorScreen(error.message));
     if (!data) return showGate(errorScreen("We couldn’t find your account record. Ask the admin to check your access."));
     profile = data;
 
-    if (data.status === "approved") { $("gate").hidden = true; $("app").hidden = false; onApproved(); }
+    if (data.status === "approved") { showApp(); onReady(); }
     else showGate(removedScreen());
   }
 
-  /* onViewer runs instead of the sign-in screen when the page was opened from a project's view link. */
-  async function start(callback, { viewToken = null, onViewer = () => {} } = {}) {
-    onApproved = callback;
+  /* callback runs once the projects can be shown: for a signed-in editor, or for a visitor who is just looking. */
+  async function start(callback) {
+    onReady = callback;
     if (!configured) return showGate(setupScreen());
     if (location.protocol === "file:") return showGate(fileScreen());
     client = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, { auth: { flowType: "implicit" } });
     client.auth.onAuthStateChange(event => { if (event === "SIGNED_OUT") location.reload(); });
-
-    if (viewToken) { $("gate").hidden = true; $("app").hidden = false; return onViewer(viewToken); }
     await refresh();
   }
+
+  const showLogin = () => showGate(loginScreen());
 
   async function signOut() {
     await client.auth.signOut();
     location.reload();
   }
 
-  return { start, signOut, siteUrl, isAdmin, profile: () => profile, client: () => client };
+  return { start, signOut, showLogin, siteUrl, isAdmin, profile: () => profile, client: () => client };
 })();

@@ -1,5 +1,5 @@
 /* Admin: add and remove editors. Editors sign in with a code sent to their email and can change the projects you give them.
-   Everyone else views a project through its view link (Overview tab). Opened from the Profile menu (admins only). */
+   Everyone else just views the site. Opened from the Profile menu (admins only). */
 const Admin = (() => {
   const { el } = Dom;
   const db = () => Auth.client();
@@ -36,7 +36,7 @@ const Admin = (() => {
     const emails = [...new Set([...members.map(m => m.email), ...people.map(p => p.email)])].filter(e => !admins.has(e));
     const head = el("div", "vis-head");
     head.append(el("h3", null, "Editors"), el("span", "hint", `${emails.length} ${emails.length === 1 ? "editor" : "editors"}`));
-    const intro = el("p", "hint admin-intro", "Editors can change the projects you give them. Everyone else can only view, using the share link on each project’s Overview tab.");
+    const intro = el("p", "hint admin-intro", "Editors can change the projects you give them. Everyone else can look at the projects without signing in, but can’t change anything.");
 
     const list = el("section", "admin-section");
     list.append(...(emails.length ? emails.map(email => row(email, members, titles, signedUp.has(email), { say, done, btn })) : [el("p", "hint", "No editors yet.")]));

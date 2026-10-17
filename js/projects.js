@@ -11,64 +11,26 @@ const Projects = (() => {
   let syncStarted = false;
   let onStatus = () => {};
   let onChange = () => {};
-  let shared = null;          // { token } when the page was opened from a project's view link
   let preview = false;        // an admin looking at the project the way a viewer sees it
 
   const db = () => Auth.client();
   const active = () => list.find(p => p.id === activeId) || null;
-  const canEdit = () => !shared && !preview && ["admin", "editor"].includes(active()?.role);
+  const canEdit = () => !preview && ["admin", "editor"].includes(active()?.role);
 
   /* In memory a project is its content plus id, title, version and your role. Only the content is saved. */
-  const fromRow = (row, role) => ({ ...row.data, id: row.id, title: row.title, version: row.version, role, shareToken: row.share_token });
-  const toData = ({ id, title, version, role, shareToken, ...content }) => content;
+  const fromRow = (row, role) => ({ ...row.data, id: row.id, title: row.title, version: row.version, role });
+  const toData = ({ id, title, version, role, ...content }) => content;
 
   async function load() {
     const admin = Auth.isAdmin();
     const [projects, mine] = await Promise.all([
       db().from("projects").select("*").order("created_at"),
-      admin ? { data: [] } : db().from("project_members").select("project_id, role"),
+      admin || !Auth.profile() ? { data: [] } : db().from("project_members").select("project_id, role"),
     ]);
     if (projects.error) throw projects.error;
     const roles = Object.fromEntries((mine.data || []).map(m => [m.project_id, m.role]));
     list = projects.data.map(row => fromRow(row, admin ? "admin" : roles[row.id] || "viewer"));
     if (!list.some(p => p.id === activeId)) activeId = list[0]?.id || null;
-  }
-
-  /* Opens the one project a view link points to. Nobody is signed in, so there is nothing to save. */
-  async function loadShared(token) {
-    const { data, error } = await db().rpc("shared_project", { t: token });
-    if (error) throw error;
-    shared = { token };
-    list = data?.length ? [fromRow(data[0], "viewer")] : [];
-    activeId = list[0]?.id || null;
-  }
-
-  /* Viewers pick up the editors' changes every so often and when they return to the tab. */
-  function startSharedSync(changed) {
-    const check = async () => {
-      if (document.querySelector("dialog[open]")) return;
-      const { data, error } = await db().rpc("shared_project", { t: shared.token });
-      if (error) return;
-      const now = active(), row = data?.[0];
-      if (!row && !now) return;
-      if (row && now && row.version === now.version && row.title === now.title) return;
-      list = row ? [fromRow(row, "viewer")] : [];
-      activeId = list[0]?.id || null;
-      changed();
-    };
-    setInterval(check, SYNC_EVERY);
-    document.addEventListener("visibilitychange", () => { if (!document.hidden) check(); });
-  }
-
-  /* A new view link: the old one stops working at once. */
-  async function newShareLink() {
-    const project = active();
-    const token = crypto.randomUUID().replaceAll("-", "") + crypto.randomUUID().replaceAll("-", "");
-    const { data, error } = await db().from("projects").update({ share_token: token }).eq("id", project.id).select("id");
-    if (error) throw error;
-    if (!data.length) throw new Error("You don’t have permission to change this link.");
-    project.shareToken = token;
-    return token;
   }
 
   function setPreview(on) { flush(); preview = on; }
@@ -180,7 +142,7 @@ const Projects = (() => {
   const setTheme = value => Storage.save({ ...Storage.load(), theme: value });
 
   return {
-    load, loadShared, startSharedSync, newShareLink, setPreview, shared: () => shared?.token || null, previewing: () => preview, create, rename, remove, refresh: () => onChange(), active, setActive, canEdit, persist, flush, startSync, renderSelect, theme, setTheme,
+    load, setPreview, previewing: () => preview, create, rename, remove, refresh: () => onChange(), active, setActive, canEdit, persist, flush, startSync, renderSelect, theme, setTheme,
     onStatus: fn => { onStatus = fn; },
   };
 })();

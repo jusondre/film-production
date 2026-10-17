@@ -17,6 +17,3 @@ textarea.ov-input { resize: none; overflow: hidden; display: block; }
 
 .ov-danger { display: flex; align-items: center; gap: 16px; max-width: 760px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); }
 
-.ov-share { max-width: 760px; margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--line); }
-.ov-share h4 { font-size: 16px; margin-bottom: 4px; }
-.ov-share .hint { margin: 0 0 12px; }

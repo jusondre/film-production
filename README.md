@@ -1,7 +1,7 @@
 # Film Production: pre-production pipeline
 
 Sign-in needs a web address and a Supabase project: follow `SETUP.md`.
-Editors sign in with an emailed code; everyone else views a project through its share link.
+Everyone can view; editors sign in with an emailed code.
 Project details and tab content are saved as you type; uploaded files go to Supabase Storage.
 
 ## Structure
@@ -25,12 +25,11 @@ Project details and tab content are saved as you type; uploaded files go to Supa
 - `js/images.js`     picks and shrinks images (stored in the browser, so very large boards can fill storage)
 - `js/dialogs.js`, `js/dom.js`  shared name prompt and DOM helpers
 
-## Accounts and sharing
+## Accounts
 - `config.js`        your Supabase keys and the live site address
-- `js/auth.js`       editor sign-in by emailed code
+- `js/auth.js`       Sign in for editors (emailed code); visitors can look without signing in
 - `js/admin.js`      Admin screen (add/remove editors), opened from the Profile menu by admins
 - `supabase/setup.sql`, `step2_projects.sql`, `step4_files.sql`  tables, access rules, file storage
-- `supabase/step6_share_and_editors.sql`  view-link tokens, shared project read, remove-editor function
-- `supabase/functions/shared-files/`  lets view-link visitors see and download a project's files
+- `supabase/step6_share_and_editors.sql`  open viewing, remove-editor function
 - `supabase/emails/sign-in-code.html`  the sign-in code email
-- `css/access.css`   view-only mode (used for view links and the admin's preview)
+- `css/access.css`   view-only mode (visitors and the admin's preview)

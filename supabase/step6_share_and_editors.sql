@@ -1,33 +1,24 @@
--- Film Production, step 6: view links for viewers, sign-in codes for editors.
+-- Film Production, step 6: open viewing for everyone, sign-in codes for editors.
 -- Run AFTER step4_files.sql: SQL Editor, New query, paste, Run. Safe to run more than once.
 --
--- Viewers have no account: anyone with a project's view link can see it, read-only.
--- Editors are emails you add in the Admin screen; they sign in with a code sent to that email.
+-- Anyone who opens the site can LOOK at the projects and files without signing in.
+-- Only editors (emails you add in the Admin screen) can change things, after signing in with an emailed code.
 
--- 1. A secret view-link token for every project --------------------------------
-alter table public.projects add column if not exists share_token text;
-update public.projects
-  set share_token = replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')
-  where share_token is null;
-alter table public.projects
-  alter column share_token set default replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''),
-  alter column share_token set not null;
-create unique index if not exists projects_share_token_key on public.projects (share_token);
+-- 1. Everyone can read projects (changing them still needs an editor or admin) ---------------
+drop policy if exists "read projects" on public.projects;
+drop policy if exists "anyone reads projects" on public.projects;
+create policy "anyone reads projects" on public.projects for select to anon, authenticated using (true);
 
--- 2. What a view link may read: that one project, nothing else ----------------------
--- Runs with the owner's rights so people who are not signed in can open a project, but only
--- when they know its token. The token itself is never returned.
-create or replace function public.shared_project(t text)
-returns table (id uuid, title text, data jsonb, version integer)
-language sql stable security definer set search_path = public as $$
-  select p.id, p.title, p.data, p.version
-  from public.projects p
-  where length(coalesce(t, '')) >= 32 and p.share_token = t;
-$$;
-revoke all on function public.shared_project(text) from public;
-grant execute on function public.shared_project(text) to anon, authenticated;
+-- 2. Everyone can see and download files ------------------------------------------------------
+drop policy if exists "anyone reads project files" on storage.objects;
+create policy "anyone reads project files" on storage.objects for select to anon, authenticated
+  using (bucket_id = 'project-files');
 
--- 3. Removing an editor deletes their account completely ---------------------------
+-- 3. Clean up the earlier share-link idea, if it was installed ----------------------------------
+drop function if exists public.shared_project(text);
+alter table public.projects drop column if exists share_token;
+
+-- 4. Removing an editor deletes their account completely ---------------------------------------
 create or replace function public.remove_editor(p_email text) returns void
 language plpgsql security definer set search_path = public, auth as $$
 declare v_email text := lower(trim(p_email));
@@ -44,5 +35,5 @@ end $$;
 revoke all on function public.remove_editor(text) from public;
 grant execute on function public.remove_editor(text) to authenticated;
 
--- 4. Everyone who was a "viewer" before now uses the view link instead -----------------
+-- 5. Everyone who was a "viewer" before simply views the site now ------------------------------
 delete from public.project_members where role = 'viewer';

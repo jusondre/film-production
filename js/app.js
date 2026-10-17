@@ -41,12 +41,9 @@ const App = (() => {
 
   function render() {
     const project = Projects.active();
-    const viewing = Boolean(Projects.shared());
     Projects.renderSelect($("project-select"));
     document.body.classList.toggle("is-viewer", Boolean(project) && !Projects.canEdit());
     $("role-note").textContent = project && !Projects.canEdit() ? "View only" : "";
-    $("viewer-title").hidden = !viewing; $("viewer-title").textContent = project?.title || "";
-    if (viewing) $("project-select").hidden = true;
     const previewing = Projects.previewing();
     $("preview-bar").hidden = !previewing;
     $("preview-toggle").hidden = !Auth.isAdmin() || !project;
@@ -61,11 +58,10 @@ const App = (() => {
     const tab = tabs().find(t => t.id === activeTab) || tabs()[0];
 
     if (!project) {
-      if (viewing) return renderEmpty(view, "This link isn’t active", "The link may have been replaced. Ask for the newest view link.");
       return Auth.isAdmin()
         ? renderEmpty(view, "Start your first film", "Create a project to keep its details, crew, shoot days, tasks, boards and files in one place.",
             { label: "New project", run: openProjectDialog })
-        : renderEmpty(view, "No projects yet", "You haven’t been added to a project yet. Ask the admin to add you.");
+        : renderEmpty(view, "No projects yet", "Nothing has been added here yet. Check back soon.");
     }
     tab.render(view, project);
   }
@@ -76,33 +72,21 @@ const App = (() => {
     $("project-dialog").showModal();
   }
 
-  /* Runs once the signed-in person has been approved. */
+  /* Runs when the projects can be shown: for a signed-in editor, or for anyone who is just looking. */
   async function enter() {
-    const me = Auth.profile();
-    $("user-name").textContent = me.full_name || me.email;
+    const me = Auth.profile();   // null for visitors who are only looking
+    $("user-name").textContent = me ? me.full_name || me.email : "";
+    $("user-name").parentElement.hidden = !me;
+    $("sign-out").hidden = !me;
+    $("viewer-signin").hidden = Boolean(me);
+    $("profile-btn").firstChild.textContent = me ? "Profile " : "Menu ";
     Projects.onStatus(text => { $("save-status").textContent = text; });
     try {
       await Projects.load();
     } catch (error) {
-      return renderEmpty($("view"), "Couldn’t load projects", `${error.message}. If this is a new setup, run supabase/step2_projects.sql.`);
+      return renderEmpty($("view"), "Couldn’t load projects", `${error.message}. If this is a new setup, run supabase/step6_share_and_editors.sql.`);
     }
     Projects.startSync(render);
-    render();
-  }
-
-  /* Runs instead of enter() when the page was opened from a project's view link: nobody is signed in. */
-  async function enterViewer(token) {
-    $("new-project").hidden = $("admin-open").hidden = $("preview-toggle").hidden = $("sign-out").hidden = true;
-    $("user-name").parentElement.hidden = true;
-    $("profile-btn").firstChild.textContent = "Menu ";
-    $("viewer-signin").hidden = false;
-    $("viewer-signin").onclick = () => { location.href = location.pathname; };
-    try {
-      await Projects.loadShared(token);
-    } catch (error) {
-      return renderEmpty($("view"), "Couldn’t open this link", `${error.message}. If this is a new setup, run supabase/step6_share_and_editors.sql.`);
-    }
-    Projects.startSharedSync(render);
     render();
   }
 
@@ -134,7 +118,8 @@ const App = (() => {
     $("sign-out").onclick = Auth.signOut;
     $("preview-toggle").onclick = () => { Projects.setPreview(!Projects.previewing()); adminOpen = false; render(); };
     $("preview-exit").onclick = () => { Projects.setPreview(false); render(); };
-    Auth.start(enter, { viewToken: new URLSearchParams(location.search).get("view"), onViewer: enterViewer });
+    $("viewer-signin").onclick = Auth.showLogin;
+    Auth.start(enter);
   }
   return { init };
 })();

@@ -16,20 +16,7 @@ const Files = (() => {
   const size = bytes => bytes < 1024 ? `${bytes} B`
     : bytes < 1048576 ? `${Math.round(bytes / 1024)} KB` : `${(bytes / 1048576).toFixed(1)} MB`;
 
-  /* People who opened a view link aren't signed in, so their file list and downloads go through the shared-files function. */
-  async function viaLink(body) {
-    const { data, error } = await Auth.client().functions.invoke("shared-files", { body: { token: Projects.shared(), ...body } });
-    if (error) {
-      let text = "Files aren’t available through this link right now.";
-      try { text = (await error.context.json()).error || text; } catch {}
-      throw new Error(text);
-    }
-    if (data?.error) throw new Error(data.error);
-    return data;
-  }
-
   async function list(projectId) {
-    if (Projects.shared()) return (await viaLink({ action: "list" })).files;
     const { data, error } = await store().list(projectId, { limit: 1000, sortBy: { column: "created_at", order: "desc" } });
     if (error) throw error;
     return data.filter(f => f.name !== ".emptyFolderPlaceholder");
@@ -59,7 +46,7 @@ const Files = (() => {
       let files;
       try { files = await list(project.id); }
       catch (error) {
-        if (mine === token) body.replaceChildren(el("p", "form-error", `${error.message}${Projects.shared() ? "" : ". If this is a new setup, run supabase/step4_files.sql."}`));
+        if (mine === token) body.replaceChildren(el("p", "form-error", `${error.message}. If this is a new setup, run supabase/step4_files.sql and step6_share_and_editors.sql.`));
         return;
       }
       if (mine !== token) return;
@@ -104,14 +91,9 @@ const Files = (() => {
     const open = el("button", "btn btn-ghost", "Download");
     open.onclick = async () => {
       try {
-        const url = Projects.shared()
-          ? (await viaLink({ action: "download", name: file.name })).url
-          : await (async () => {
-              const { data, error } = await store().createSignedUrl(`${project.id}/${file.name}`, 60, { download: name });
-              if (error) throw error;
-              return data.signedUrl;
-            })();
-        const a = el("a"); a.href = url; a.click();
+        const { data, error } = await store().createSignedUrl(`${project.id}/${file.name}`, 60, { download: name });
+        if (error) throw error;
+        const a = el("a"); a.href = data.signedUrl; a.click();
       } catch (error) { alert(error.message); }
     };
     const del = el("button", "btn btn-danger", "Delete");
