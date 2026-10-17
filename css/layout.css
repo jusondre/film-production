@@ -52,3 +52,5 @@
 .preview-bar { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 10px 20px; font-size: 14px; color: var(--bg); background: var(--ink); }
 .preview-bar[hidden] { display: none; }
 .preview-exit { font: 600 14px var(--font); color: var(--ink); background: var(--bg); border: 0; border-radius: var(--radius); padding: 5px 12px; cursor: pointer; }
+.profile-btn.has-avatar { display: grid; place-items: center; width: 38px; height: 38px; padding: 0; overflow: hidden; border-radius: 50%; font-size: 13px; }
+.profile-btn.has-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }

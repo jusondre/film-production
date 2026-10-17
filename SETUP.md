@@ -1,23 +1,35 @@
 # Setting up Film Production
 
 Hosted on GitHub Pages: https://jusondre.github.io/film-production/
-**Anyone who opens the site can look at the projects straight away** (no account). Dark mode is in the Menu.
-**Editors** press **Sign in** (top right), enter their email, and type the code emailed to them (no passwords).
-Only emails you add in Admin can sign in.
+Everyone signs in with **Discord**. Only people **in your Discord server** can see anything.
+Members with the **admin** role can edit; everyone else in the server can only look.
+There are no passwords, no sign-up, no invitations and no emails to send. Roles are managed in Discord.
 
-## One-time setup (Supabase)
-1. SQL Editor: run `supabase/setup.sql` (once; put your own email in it), then `step2_projects.sql`, `step4_files.sql`, and `step6_share_and_editors.sql`. Each is safe to run again.
-2. Keys: put the Project URL and public key in `config.js`. `siteUrl` is already the GitHub address.
-3. **Real email sending** (the built-in sender allows only a couple of emails per hour, and every sign-in code is an email).
-   Authentication, Emails, SMTP Settings: switch on custom SMTP (Gmail: host `smtp.gmail.com`, port `465`, username = your Gmail,
-   password = a Google *App password*; or a service such as Resend).
-4. Authentication, Sign In / Providers: switch **ON** "Allow new users to sign up". This is safe: the database only lets in emails you added as editors.
-5. **Authentication, URL Configuration: set Site URL to `https://jusondre.github.io/film-production/`** (replace `http://localhost:3000`) and add the same address to Redirect URLs.
-   This is what stops anything from pointing at localhost.
-6. Authentication, Emails, Templates: paste `supabase/emails/sign-in-code.html` into both **Magic link** and **Confirm sign up**
-   (the subject is written at the top of the file). The email should show a 6-digit code and no link.
+## 1. Discord (about 5 minutes)
+1. https://discord.com/developers/applications, **New Application**.
+2. **OAuth2**: copy the **Client ID**, press Reset Secret and copy the **Client Secret**. Under Redirects add
+   `https://vioxoepubvaqjzvkxqjo.supabase.co/auth/v1/callback` and save.
+3. **Bot**: press Reset Token and copy the token. (Nothing else on this page needs changing.)
+4. Add the bot to your server: **OAuth2, URL Generator**, tick scope `bot`, no permissions needed, open the link it makes and choose your server.
+   The bot only looks up who is in the server and which roles they have.
+5. Your server's ID: in Discord, Settings, Advanced, switch on Developer Mode; then right-click your server's name and choose **Copy Server ID**.
+6. In your server, make sure there is a role named **admin** and give it to the people who should edit.
 
-## Adding editors
-Profile menu, Admin: type an email, choose a project (or all projects), press "Add editor". They open the site, press Sign in,
-enter that email, and type the code that arrives. "Remove" deletes their account; the × on a project takes them off just that project.
-Profile menu, "View as viewer" shows you exactly what visitors see.
+## 2. Supabase
+1. SQL Editor: if this is a brand-new project run `setup.sql`, `step2_projects.sql`, `step4_files.sql` first. Then run **`step7_discord.sql`**.
+2. Authentication, Sign In / Providers, **Discord**: switch on, paste the Client ID and Client Secret, save.
+   Make sure "Allow new users to sign up" is **on** (Discord sign-in creates the account; the server check decides who gets in).
+3. Authentication, URL Configuration: Site URL = `https://jusondre.github.io/film-production/` and add the same address under Redirect URLs.
+4. Edge Functions, Deploy a new function, Via Editor: name it `discord-access`, paste `supabase/functions/discord-access/index.ts`, deploy.
+5. Edge Functions, Secrets (or Project Settings, Edge Functions): add
+   - `DISCORD_BOT_TOKEN` = the bot token from step 1.3
+   - `DISCORD_GUILD_ID` = the server ID from step 1.5
+   - `DISCORD_ADMIN_ROLE` = `admin` (only needed if your role is named something else; a role ID works too)
+6. Keys: `config.js` already has your Supabase URL and public key.
+
+## How it behaves
+- Not signed in: the site only shows "Sign in with Discord" (and the dark mode switch in the menu).
+- Signed in but not in the server: a short message, nothing else.
+- In the server: all projects, read-only. With the admin role: editing, new projects, deleting, and "View as viewer" in the menu.
+- The site asks Discord again every 15 minutes (and when you return to the tab), so someone who leaves the server or loses the admin role is locked out or demoted quickly.
+- Anyone who was added through the old email system is not needed any more; old accounts and tables can stay or be deleted.

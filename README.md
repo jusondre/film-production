@@ -1,7 +1,7 @@
 # Film Production: pre-production pipeline
 
 Sign-in needs a web address and a Supabase project: follow `SETUP.md`.
-Everyone can view; editors sign in with an emailed code.
+Sign in with Discord: server members can view, members with the admin role can edit.
 Project details and tab content are saved as you type; uploaded files go to Supabase Storage.
 
 ## Structure
@@ -27,9 +27,8 @@ Project details and tab content are saved as you type; uploaded files go to Supa
 
 ## Accounts
 - `config.js`        your Supabase keys and the live site address
-- `js/auth.js`       Sign in for editors (emailed code); visitors can look without signing in
-- `js/admin.js`      Admin screen (add/remove editors), opened from the Profile menu by admins
-- `supabase/setup.sql`, `step2_projects.sql`, `step4_files.sql`  tables, access rules, file storage
-- `supabase/step6_share_and_editors.sql`  open viewing, remove-editor function
-- `supabase/emails/sign-in-code.html`  the sign-in code email
-- `css/access.css`   view-only mode (visitors and the admin's preview)
+- `js/auth.js`       Discord sign-in; asks the discord-access function who is in the server and who has the admin role
+- `supabase/functions/discord-access/`  checks Discord with the bot and records the answer
+- `supabase/setup.sql`, `step2_projects.sql`, `step4_files.sql`  tables, file storage
+- `supabase/step7_discord.sql`  access rules: Discord members read, Discord admins edit
+- `css/access.css`   view-only mode (members without the admin role, and the admin's preview)

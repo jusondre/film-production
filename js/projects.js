@@ -22,14 +22,10 @@ const Projects = (() => {
   const toData = ({ id, title, version, role, ...content }) => content;
 
   async function load() {
-    const admin = Auth.isAdmin();
-    const [projects, mine] = await Promise.all([
-      db().from("projects").select("*").order("created_at"),
-      admin || !Auth.profile() ? { data: [] } : db().from("project_members").select("project_id, role"),
-    ]);
+    const role = Auth.isAdmin() ? "admin" : "viewer";   // the Discord admin role can edit; everyone else in the server can look
+    const projects = await db().from("projects").select("*").order("created_at");
     if (projects.error) throw projects.error;
-    const roles = Object.fromEntries((mine.data || []).map(m => [m.project_id, m.role]));
-    list = projects.data.map(row => fromRow(row, admin ? "admin" : roles[row.id] || "viewer"));
+    list = projects.data.map(row => fromRow(row, role));
     if (!list.some(p => p.id === activeId)) activeId = list[0]?.id || null;
   }
 
