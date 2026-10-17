@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Film Production</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css?v=5">
+  <link rel="stylesheet" href="css/base.css?v=5">
+  <link rel="stylesheet" href="css/layout.css?v=5">
+  <link rel="stylesheet" href="css/calendar.css?v=5">
+  <link rel="stylesheet" href="css/tasks.css?v=5">
+  <link rel="stylesheet" href="css/crew.css?v=5">
+  <link rel="stylesheet" href="css/overview.css?v=5">
+  <link rel="stylesheet" href="css/files.css?v=5">
+  <link rel="stylesheet" href="css/visualize.css?v=5">
+  <link rel="stylesheet" href="css/shotlist.css?v=5">
+  <link rel="stylesheet" href="css/auth.css?v=5">
+  <link rel="stylesheet" href="css/admin.css?v=5">
+  <link rel="stylesheet" href="css/access.css?v=5">
+</head>
+<body>
+  <div id="gate" class="gate"><p class="gate-sub">Loading…</p></div>
+
+  <div id="app" hidden>
+    <header class="topbar">
+      <span class="brand">Film Production</span>
+      <div class="project-switch">
+        <select id="project-select" aria-label="Project" hidden></select>
+        <span id="role-note" class="role-note"></span>
+      </div>
+      <div class="topbar-right">
+        <span id="save-status" class="save-status"></span>
+        <span id="user-name" class="user-name"></span>
+        <button class="link-btn" id="new-project">New project</button>
+        <button class="link-btn" id="admin-open" hidden>Admin</button>
+        <button class="link-btn" id="change-password">Change password</button>
+        <button class="link-btn" id="sign-out">Sign out</button>
+        <button class="link-btn" id="theme-toggle">Dark mode</button>
+      </div>
+    </header>
+
+    <main class="main">
+      <nav id="tabs" class="tabs" role="tablist"></nav>
+      <section id="view" class="view"></section>
+    </main>
+  </div>
+
+  <dialog id="project-dialog" class="dialog">
+    <form method="dialog" id="project-form">
+      <h3>New project</h3>
+      <label>Title <input name="title" required placeholder="e.g. The Long Winter"></label>
+      <div class="field-row">
+        <label>Format <select name="format"></select></label>
+        <label>Status <select name="status"></select></label>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-ghost" type="button" data-cancel>Cancel</button>
+        <button class="btn btn-primary" value="ok">Create project</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="crew-dialog" class="dialog">
+    <form method="dialog" id="crew-form">
+      <h3 id="crew-dialog-title">Add crew member</h3>
+      <label id="crew-pick-wrap" hidden>Team member <select name="pick"></select></label>
+      <label>Name <input name="name" required></label>
+      <label>Role <input name="role" placeholder="e.g. Director of photography"></label>
+      <div class="field-row">
+        <label>Email <input name="email" type="email" placeholder="name@example.com"></label>
+        <label>Phone <input name="phone" type="tel" placeholder="+49 170 0000000"></label>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-danger" type="button" id="crew-delete">Remove</button>
+        <span class="spacer"></span>
+        <button class="btn btn-ghost" type="button" data-cancel>Cancel</button>
+        <button class="btn btn-primary" value="ok">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="event-dialog" class="dialog">
+    <form method="dialog" id="event-form">
+      <h3 id="event-dialog-title">Add event</h3>
+      <label>Title <input name="title" required></label>
+      <div class="field-row">
+        <label>Date <input name="date" type="date" required></label>
+        <label>Time (24h) <input name="time" inputmode="numeric" maxlength="5" placeholder="14:30" pattern="([01][0-9]|2[0-3]):[0-5][0-9]" title="24-hour time, like 14:30"></label>
+      </div>
+      <label>Type <select name="type"></select></label>
+      <label>Notes <textarea name="notes" rows="3"></textarea></label>
+      <div class="dialog-actions">
+        <button class="btn btn-danger" type="button" id="event-delete">Delete</button>
+        <span class="spacer"></span>
+        <button class="btn btn-ghost" type="button" data-cancel>Cancel</button>
+        <button class="btn btn-primary" value="ok">Save event</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="task-dialog" class="dialog dialog-wide">
+    <form method="dialog" id="task-form">
+      <input name="title" class="task-title-input" required placeholder="Task name" aria-label="Task name">
+      <div class="task-fields">
+        <label>Assigned to <select name="assignee"></select></label>
+        <label>Status <select name="status"></select></label>
+        <label>Due date <input name="due" type="date"></label>
+      </div>
+      <label>Description <textarea name="description" rows="3" placeholder="Add a description (optional)"></textarea></label>
+
+      <h4 class="section-title">Checklists</h4>
+      <div id="cl-summary" class="cl-summary">
+        <div class="cl-summary-text"><span id="cl-pct"></span><span id="cl-count"></span></div>
+        <div id="cl-bar"></div>
+      </div>
+      <div id="cl-groups"></div>
+      <div class="field-row cl-new">
+        <input id="cl-new-group" placeholder="New checklist, e.g. Pitch deck">
+        <button class="btn btn-ghost" type="button" id="cl-add-group">Add checklist</button>
+      </div>
+
+      <div class="dialog-actions">
+        <button class="btn btn-danger" type="button" id="task-delete">Delete</button>
+        <span class="spacer"></span>
+        <button class="btn btn-ghost" type="button" data-cancel>Cancel</button>
+        <button class="btn btn-primary" value="ok">Save task</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="password-dialog" class="dialog">
+    <form method="dialog" id="password-form">
+      <h3>Change password</h3>
+      <label>New password <input name="password" type="password" autocomplete="new-password" minlength="8" required></label>
+      <label>Repeat it <input name="confirm" type="password" autocomplete="new-password" minlength="8" required></label>
+      <p id="password-note" class="form-error" role="alert"></p>
+      <div class="dialog-actions">
+        <span class="spacer"></span>
+        <button class="btn btn-ghost" type="button" data-cancel>Cancel</button>
+        <button class="btn btn-primary" value="ok">Save password</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="prompt-dialog" class="dialog">
+    <form method="dialog" id="prompt-form">
+      <h3 id="prompt-title"></h3>
+      <label><span id="prompt-label"></span> <input name="value" required></label>
+      <div class="dialog-actions">
+        <span class="spacer"></span>
+        <button class="btn btn-ghost" type="button" data-cancel>Cancel</button>
+        <button class="btn btn-primary" id="prompt-ok" value="ok">Create</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="shot-dialog" class="dialog dialog-wide">
+    <form method="dialog" id="shot-form">
+      <h3 id="shot-dialog-title">Add shot</h3>
+      <div class="shot-top">
+        <div id="shot-image"></div>
+        <label>Description <textarea name="description" rows="5" placeholder="What happens in this shot?"></textarea></label>
+      </div>
+      <h4 class="section-title">Shot size</h4>
+      <div id="shot-sizes" class="chip-columns"></div>
+      <input name="customSize" placeholder="Custom shot size">
+      <div class="field-row shot-gear">
+        <label>Lens <input name="lens" list="lens-options" placeholder="35mm"></label>
+        <label>Movement <input name="movement" list="movement-options" placeholder="Tripod"></label>
+      </div>
+      <h4 class="section-title">Framing</h4>
+      <div id="shot-framing" class="chips"></div>
+      <h4 class="section-title">Focus and depth of field</h4>
+      <div id="shot-focus" class="chips"></div>
+      <h4 class="section-title">Camera height</h4>
+      <div id="shot-height" class="chips"></div>
+      <datalist id="lens-options"><option value="18mm"><option value="24mm"><option value="28mm"><option value="35mm"><option value="50mm"><option value="85mm"><option value="100mm"><option value="135mm"></datalist>
+      <datalist id="movement-options"><option value="Static"><option value="Tripod"><option value="Handheld"><option value="Dolly"><option value="Steadicam"><option value="Gimbal"><option value="Pan"><option value="Tilt"><option value="Crane"><option value="Drone"></datalist>
+      <div class="dialog-actions">
+        <button class="btn btn-danger" type="button" id="shot-delete">Delete</button>
+        <span class="spacer"></span>
+        <button class="btn btn-ghost" type="button" data-cancel>Cancel</button>
+        <button class="btn btn-primary" value="ok">Save shot</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="js/dom.js?v=5"></script>
+  <script src="js/images.js?v=5"></script>
+  <script src="js/storage.js?v=5"></script>
+  <script src="js/theme.js?v=5"></script>
+  <script src="js/projects.js?v=5"></script>
+  <script src="js/dialogs.js?v=5"></script>
+  <script src="js/overview.js?v=5"></script>
+  <script src="js/files.js?v=5"></script>
+  <script src="js/crew.js?v=5"></script>
+  <script src="js/calendar.js?v=5"></script>
+  <script src="js/tasks.js?v=5"></script>
+  <script src="js/moodboards.js?v=5"></script>
+  <script src="js/storyboard.js?v=5"></script>
+  <script src="js/shotlist.js?v=5"></script>
+  <script src="js/visualize.js?v=5"></script>
+  <script src="config.js?v=5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="js/auth.js?v=5"></script>
+  <script src="js/admin.js?v=5"></script>
+  <script src="js/app.js?v=5"></script>
+</body>
+</html>

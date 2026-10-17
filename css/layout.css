@@ -1,0 +1,29 @@
+/* Page structure: top bar, project switcher, tabs, empty states. */
+.topbar { display: flex; align-items: center; gap: 32px; padding: 20px 40px; }
+.brand { font-size: 18px; font-weight: 700; letter-spacing: -0.03em; }
+.project-switch { display: flex; align-items: center; gap: 16px; }
+.project-switch select {
+  font: 600 15px var(--font); color: var(--ink); background: var(--fill);
+  border: 0; border-radius: var(--radius); padding: 7px 10px; max-width: 240px; cursor: pointer;
+}
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 20px; }
+.user-name, .role-note, .save-status { color: var(--muted); font-size: 13px; }
+
+.main { max-width: 1200px; margin: 0 auto; padding: 8px 40px 56px; }
+.tabs { display: flex; flex-wrap: wrap; gap: 24px; border-bottom: 1px solid var(--line); }
+.tab {
+  font: inherit; color: var(--muted); cursor: pointer;
+  padding: 10px 0; background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
+.view { padding-top: 28px; }
+
+.empty { max-width: 380px; margin: 96px auto; text-align: center; color: var(--muted); }
+.empty h3 { font-size: 28px; color: var(--ink); margin-bottom: 8px; }
+.empty .btn { margin-top: 20px; }
+
+@media (max-width: 760px) {
+  .topbar { padding: 16px 20px; gap: 16px; flex-wrap: wrap; }
+  .main { padding: 8px 20px 40px; }
+}

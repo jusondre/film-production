@@ -1,0 +1,21 @@
+/* View-only mode. Hides every control that changes data.
+   The real protection is in the database rules; this just keeps viewers from seeing buttons that won't work. */
+.is-viewer #view .btn-primary,
+.is-viewer #view .btn-danger,
+.is-viewer #view .edit-only,
+.is-viewer #view .add-task,
+.is-viewer #view .add-shot,
+.is-viewer #view .tile-remove,
+.is-viewer #view .icon-btn,
+.is-viewer dialog .btn-primary,
+.is-viewer dialog .btn-danger,
+.is-viewer dialog .icon-btn,
+.is-viewer dialog .cl-new,
+.is-viewer dialog .cl-add { display: none !important; }
+
+.is-viewer #view .pic,
+.is-viewer dialog input,
+.is-viewer dialog textarea,
+.is-viewer dialog select,
+.is-viewer dialog .chip,
+.is-viewer dialog .pic { pointer-events: none; }

@@ -1,0 +1,44 @@
+/* Visualize tab: section switcher, mood boards, story board. */
+.subtabs { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 28px; background: var(--fill); border-radius: 10px; }
+.subtab { font: inherit; color: var(--muted); background: none; border: 0; padding: 6px 14px; border-radius: 7px; cursor: pointer; }
+.subtab:hover { color: var(--ink); }
+.subtab[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
+
+.vis-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.vis-head h3 { font-size: 28px; }
+.vis-head .btn { align-self: center; }
+.hint { color: var(--muted); margin: 0; }
+.title-input {
+  flex: 1; min-width: 0; padding: 0; font: 600 28px var(--font); letter-spacing: -0.02em;
+  color: var(--ink); background: transparent; border: 0;
+}
+
+.pill-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+.pill { font: inherit; color: var(--ink); background: var(--fill); border: 0; border-radius: 99px; padding: 6px 14px; cursor: pointer; }
+.pill[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); }
+
+.masonry { columns: 4 220px; column-gap: 12px; }
+.tile { position: relative; break-inside: avoid; margin: 0 0 12px; border-radius: 12px; overflow: hidden; }
+.tile img { display: block; width: 100%; }
+.tile-remove {
+  position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border: 0; border-radius: 50%;
+  background: rgb(0 0 0 / .6); color: #fff; font-size: 16px; cursor: pointer; opacity: 0; transition: opacity .15s;
+}
+.tile:hover .tile-remove, .tile-remove:focus-visible { opacity: 1; }
+
+.pic {
+  display: grid; place-items: center; width: 100%; aspect-ratio: 16 / 9; padding: 0; overflow: hidden;
+  font: inherit; color: var(--muted); background: var(--surface); border: 0; border-radius: 10px; cursor: pointer;
+}
+.pic img { width: 100%; height: 100%; object-fit: cover; }
+.pic:hover { color: var(--ink); }
+
+.frames { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.frame { background: var(--fill); border-radius: 14px; padding: 10px; }
+.frame.is-over { outline: 2px solid var(--ink); }
+.frame-head { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 8px; font-size: 13px; color: var(--muted); cursor: grab; }
+.frame-caption {
+  display: block; width: 100%; min-height: 60px; margin-top: 8px; padding: 6px; resize: vertical;
+  font: inherit; color: var(--ink); background: transparent; border: 0; border-radius: 8px;
+}
+.frame-caption:focus { background: var(--surface); }

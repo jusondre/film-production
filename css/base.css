@@ -1,0 +1,45 @@
+/* Reset, typography, and shared components. */
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; min-height: 100vh;
+  background: var(--bg); color: var(--ink);
+  font: 15px/1.5 var(--font); letter-spacing: -0.005em;
+  transition: background .2s, color .2s;
+}
+h1, h2, h3, h4 { font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.btn {
+  font: inherit; font-weight: 500; cursor: pointer;
+  padding: 8px 14px; border-radius: var(--radius); border: 1px solid transparent;
+  transition: opacity .15s, background .15s;
+}
+.btn-primary { background: var(--ink); color: var(--on-ink); }
+.btn-primary:hover { opacity: .85; }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn-ghost:hover { background: var(--fill); }
+.btn-danger { background: transparent; color: var(--ev-shoot); border-color: var(--line); }
+.link-btn { font: inherit; color: var(--muted); background: none; border: 0; cursor: pointer; padding: 4px 0; }
+.link-btn:hover { color: var(--ink); }
+
+.dialog {
+  border: 1px solid var(--line); border-radius: 14px; padding: 24px;
+  background: var(--surface); color: var(--ink); width: min(420px, 92vw);
+}
+.dialog::backdrop { background: rgb(0 0 0 / .35); }
+.dialog h3 { font-size: 20px; margin-bottom: 18px; }
+.dialog label { display: block; margin-bottom: 12px; font-size: 13px; color: var(--muted); }
+.dialog input, .dialog select, .dialog textarea {
+  display: block; width: 100%; margin-top: 4px; padding: 8px 10px;
+  font: inherit; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: var(--radius);
+}
+.dialog input:focus, .dialog select:focus, .dialog textarea:focus { outline: 0; border-color: var(--ink); }
+.dialog-actions { display: flex; gap: 8px; margin-top: 20px; }
+.spacer { flex: 1; }
+.dialog-wide { width: min(600px, 94vw); max-height: 90vh; }
+.field-row { display: flex; gap: 8px; }
+.field-row > * { flex: 1; min-width: 0; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

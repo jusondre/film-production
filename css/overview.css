@@ -1,0 +1,18 @@
+/* Overview tab: summary figures and the project details form. */
+.ov-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; max-width: 760px; margin-bottom: 32px; }
+.ov-stat { padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; min-width: 0; }
+.ov-stat strong { display: block; font-size: 22px; letter-spacing: -0.02em; }
+.ov-stat span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 13px; }
+
+.ov-form { display: grid; gap: 16px; max-width: 760px; }
+.ov-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.ov-field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+.ov-input {
+  width: 100%; padding: 9px 12px; font: 15px/1.5 var(--font); color: var(--ink);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+}
+.ov-input:focus { outline: 0; border-color: var(--ink); }
+textarea.ov-input { resize: vertical; }
+.ov-input:disabled { opacity: 1; cursor: default; }
+
+.ov-danger { display: flex; align-items: center; gap: 16px; max-width: 760px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); }

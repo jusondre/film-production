@@ -1,0 +1,66 @@
+/* Tasks tab: summary, soft columns, borderless cards, detail panel. */
+.task-summary { max-width: 420px; margin-bottom: 28px; }
+.task-summary strong { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; }
+.task-summary span { color: var(--muted); margin-left: 10px; font-size: 13px; }
+.task-summary .progress { margin-top: 8px; }
+
+.progress { height: 4px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.progress > i { display: block; height: 100%; background: var(--bar, var(--ink)); border-radius: 99px; transition: width .3s; }
+
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.column { background: var(--fill); border-radius: 16px; padding: 14px; min-height: 180px; transition: background .15s; }
+.column.is-over { background: var(--line); }
+.column h4 { display: flex; align-items: center; gap: 8px; margin: 2px 4px 14px; font-size: 14px; }
+.column h4 span { margin-left: auto; color: var(--muted); font-weight: 400; }
+.dot { width: 9px; height: 9px; border-radius: 50%; }
+
+.task-card {
+  background: var(--surface); border-radius: 12px; padding: 14px; margin-bottom: 10px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / .06); cursor: grab; transition: transform .15s, box-shadow .15s;
+}
+.task-card:hover { box-shadow: 0 4px 12px rgb(0 0 0 / .1); }
+.task-card.is-dragging { opacity: .4; }
+.task-title { font-weight: 500; margin-bottom: 10px; }
+.task-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.task-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 12.5px; color: var(--muted); min-height: 22px; }
+.due.is-overdue { color: var(--ev-shoot); font-weight: 600; }
+.avatar {
+  display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--fill); color: var(--ink); font-size: 10.5px; font-weight: 600;
+}
+.add-task {
+  display: block; width: 100%; padding: 8px; font: inherit; color: var(--muted);
+  background: none; border: 0; border-radius: 8px; cursor: pointer;
+}
+.add-task:hover { background: var(--line); color: var(--ink); }
+
+/* Detail panel */
+.dialog .task-title-input {
+  margin: 0 0 16px; padding: 0; border: 0; background: transparent;
+  font-size: 24px; font-weight: 600; letter-spacing: -0.02em;
+}
+.task-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.section-title { font-size: 16px; margin: 8px 0 12px; }
+.cl-summary { margin-bottom: 14px; }
+.cl-summary-text { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.cl-group { background: var(--bg); border-radius: 12px; padding: 4px 12px; margin-bottom: 8px; }
+.cl-group summary { display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer; list-style: none; font-weight: 500; }
+.cl-group summary::-webkit-details-marker { display: none; }
+.cl-group summary::after {
+  content: ""; width: 7px; height: 7px; margin: 0 4px 3px 0; border: solid var(--muted);
+  border-width: 0 1.5px 1.5px 0; transform: rotate(-45deg); transition: transform .15s;
+}
+.cl-group[open] summary::after { transform: rotate(45deg); }
+.cl-title { flex: 1; }
+.cl-n { font-size: 12.5px; color: var(--muted); font-weight: 400; }
+.checklist { list-style: none; margin: 0; padding: 0; }
+.checklist li { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+.checklist li span { flex: 1; }
+.checklist li.is-done span { text-decoration: line-through; color: var(--muted); }
+.checklist input[type="checkbox"] { width: auto; margin: 0; accent-color: var(--ink); }
+.dialog .cl-add { margin: 2px 0 8px; padding: 6px 0; border: 0; background: transparent; }
+.cl-new { margin-top: 4px; }
+.icon-btn { background: none; border: 0; cursor: pointer; color: var(--muted); font-size: 18px; line-height: 1; }
+.icon-btn:hover { color: var(--ink); }
+
+@media (max-width: 760px) { .board { grid-template-columns: 1fr; } .task-fields { grid-template-columns: 1fr; } }

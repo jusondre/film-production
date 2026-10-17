@@ -1,0 +1,4 @@
+/* Files tab: one row per uploaded file. */
+.files-list { max-width: 760px; min-height: 160px; }
+.file-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 12px; border-radius: 12px; }
+.file-row:hover { background: var(--fill); }
