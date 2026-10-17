@@ -76,13 +76,27 @@ const Auth = (() => {
     document.addEventListener("visibilitychange", () => { if (!document.hidden) again(); });
   }
 
+  /* Discord sends people back with ?error=... (or #error=...) when something went wrong. Say what, instead of silently showing sign-in again. */
+  function returnedError() {
+    const params = new URLSearchParams(location.search), hash = new URLSearchParams(location.hash.replace(/^#/, ""));
+    const text = params.get("error_description") || hash.get("error_description") || params.get("error") || hash.get("error");
+    if (!text) return "";
+    history.replaceState(null, "", location.pathname);
+    if (/database error saving new user|not_invited/i.test(text)) return "The database still has the old invite-only rule. Run supabase/step7_discord.sql in the Supabase SQL Editor, then sign in again.";
+    if (/email/i.test(text)) return `Discord didn’t share a verified email address, which Supabase needs to create your account. Verify the email on your Discord account, then try again. (${text})`;
+    if (/redirect/i.test(text)) return `Discord or Supabase doesn’t accept the return address. Check the redirect URLs in SETUP.md. (${text})`;
+    return text;
+  }
+
   async function start(callback) {
     onReady = callback;
     if (!configured) return showGate(setupScreen());
     if (location.protocol === "file:") return showGate(fileScreen());
-    client = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+    const problem = returnedError();
+    client = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, { auth: { detectSessionInUrl: true, persistSession: true, autoRefreshToken: true } });
     client.auth.onAuthStateChange(event => { if (event === "SIGNED_OUT") location.reload(); });
     watch();
+    if (problem) return showGate(message("Couldn’t sign you in", problem, button("Back", "btn btn-primary", () => location.replace(location.pathname))));
     await refresh();
   }
 
