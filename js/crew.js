@@ -79,6 +79,7 @@ const Crew = (() => {
       Projects.persist(true); dialog.close(); render(root, project);
     };
     dialog.returnValue = "";
+    Dialogs.review(dialog, Boolean(member), { id: "crew-dialog-title", view: "Crew member", edit: "Edit crew member" });
     dialog.showModal();
   }
 

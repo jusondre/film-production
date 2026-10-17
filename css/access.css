@@ -19,3 +19,21 @@
 .is-viewer dialog select,
 .is-viewer dialog .chip,
 .is-viewer dialog .pic { pointer-events: none; }
+
+/* Read mode inside dialogs: plain text, nothing to type into, only what was filled in. */
+.dialog.is-readonly input:disabled, .dialog.is-readonly select:disabled, .dialog.is-readonly textarea:disabled {
+  opacity: 1; color: var(--ink); -webkit-text-fill-color: var(--ink); cursor: default; resize: none;
+  border-color: transparent;
+}
+.dialog.is-readonly select:disabled { appearance: none; -webkit-appearance: none; background-image: none; }
+.dialog.is-readonly .dialog-actions .btn-danger,
+.dialog.is-readonly .dialog-actions [value="ok"],
+.dialog.is-readonly .icon-btn, .dialog.is-readonly .cl-new, .dialog.is-readonly .cl-add,
+.dialog.is-readonly #shot-image .link-btn,
+.dialog.is-readonly .pic:not(:has(img)),
+.dialog.is-readonly .chip[aria-pressed="false"],
+.dialog.is-readonly .chip-group:not(:has(.chip[aria-pressed="true"])),
+.dialog.is-readonly input[name="customSize"]:placeholder-shown,
+.dialog.is-readonly .section-title:has(+ .chips:not(:has(.chip[aria-pressed="true"]))),
+.dialog.is-readonly .section-title:has(+ .chip-columns:not(:has(.chip[aria-pressed="true"]))) { display: none !important; }
+.dialog.is-readonly .chip, .dialog.is-readonly .pic { pointer-events: none; }

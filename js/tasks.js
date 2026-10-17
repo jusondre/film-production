@@ -158,6 +158,7 @@ const Tasks = (() => {
       Projects.persist(true); dialog.close(); render(root, project);
     };
     dialog.returnValue = "";
+    Dialogs.review(dialog, Boolean(task));
     dialog.showModal();
   }
 

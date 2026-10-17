@@ -348,6 +348,7 @@ const Calendar = (() => {
       Projects.persist(true); dialog.close(); render(root, project);
     };
     dialog.returnValue = "";
+    Dialogs.review(dialog, Boolean(ev), { id: "event-dialog-title", view: "Event", edit: "Edit event" });
     dialog.showModal();
   }
   return { render };

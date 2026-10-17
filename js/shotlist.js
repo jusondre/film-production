@@ -119,6 +119,7 @@ const ShotList = (() => {
       Projects.persist(); dialog.close(); render(root, project);
     };
     dialog.returnValue = "";
+    Dialogs.review(dialog, Boolean(shot), { id: "shot-dialog-title", view: "Shot", edit: "Edit shot" });
     dialog.showModal();
   }
 

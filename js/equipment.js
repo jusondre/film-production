@@ -86,6 +86,7 @@ const Equipment = (() => {
       Projects.persist(true); dialog.close(); render(root, project);
     };
     dialog.returnValue = "";
+    Dialogs.review(dialog, Boolean(item), { id: "equipment-dialog-title", view: "Equipment", edit: "Edit equipment" });
     dialog.showModal();
   }
 

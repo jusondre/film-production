@@ -111,6 +111,7 @@
   .wk-event { padding: 10px 12px; }
   .wk-title { font-size: 15px; }
 
+  .dialog-day .day-list { max-height: calc(100dvh - 190px); }
   .strip-day { min-height: 62px; }
   .mini-day { min-height: 48px; }
 }
@@ -121,7 +122,7 @@
 .day-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
 .dialog-day .day-head h3 { font-size: 26px; margin: 0; }
 .day-count { color: var(--muted); }
-.day-list { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 2px; }
+.day-list { flex: 0 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 2px; }
 .day-event { padding: 16px 18px; border: 1px solid var(--line); border-left: 4px solid var(--ev-color); border-radius: 12px; }
 .day-event.is-editable { cursor: pointer; }
 .day-event.is-editable:hover { background: var(--fill); }
